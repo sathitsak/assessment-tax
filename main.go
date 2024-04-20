@@ -27,7 +27,7 @@ func main() {
     }
 	e := echo.New()
 	
-	// e.POST("/tax/calculations", calTax)
+	e.POST("/tax/calculations", calculateTax)
 	e.GET("/", func(c echo.Context) error {
 		return c.String(http.StatusOK, "Hello, Go Bootcamp!")
 	})
@@ -37,7 +37,7 @@ type Allowance struct{
 	AllowanceType string `json:"donation"`
 	Amount float64 `json:"amount"`
 }
-type Tax struct{
+type Request struct{
 	TotalIncome float64 `json:"totalIncome"`
 	Wht float64 `json:"wht"`
 	Allowances []Allowance `json:"allowances"`
@@ -77,9 +77,17 @@ type TaxLadder struct{
 	Min float64 `json:"min"`
 }
 
+type Response struct{
+	Tax float64 `json:"tax"`
+}
 
-// func calTax(c echo.Context) error {
-// 	// User ID from path `users/:id`
-// 	id := c.Param("id")
-//   return c.String(http.StatusOK, id)
-// }
+func calculateTax(c echo.Context) error {
+	var req Request
+	err := c.Bind(&req); if err != nil {
+		return c.String(http.StatusBadRequest, "bad request")
+	}
+	res := &Response{
+		Tax: calTax(req.TotalIncome),
+	}
+  return c.JSON(http.StatusOK, res)
+}
