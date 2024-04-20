@@ -11,6 +11,7 @@ import (
 	"github.com/sathitsak/assessment-tax/pkg/tax"
 )
 
+var PERSONAL_ALLOWANCE = 60000.0
 
 func main() {
 	err := godotenv.Load()
@@ -34,6 +35,17 @@ type Request struct{
 	Allowances []Allowance `json:"allowances"`
   }
 
+
+func (req *Request) Donation()float64{
+	donation :=0.0
+	for _,v := range req.Allowances {
+		if v.AllowanceType == "donation" {
+			donation+= v.Amount
+		}
+	}
+	return donation
+}
+
 type Response struct{
 	Tax float64 `json:"tax" form:"tax"`
 	TaxRefund float64 `json:"taxRefund" form:"taxRefund"`
@@ -44,7 +56,7 @@ func calTaxHandler(c echo.Context) error {
 	err := c.Bind(&req); if err != nil {
 		return c.String(http.StatusBadRequest, "bad request")
 	}
-	tax := tax.CreateTax(req.TotalIncome,req.Wht,60000)
+	tax := tax.CreateTax(req.TotalIncome,req.Wht,PERSONAL_ALLOWANCE,req.Donation())
 	if tax.PayAble() >=0{
 		return c.JSON(http.StatusOK,&Response{Tax: tax.PayAble(), TaxRefund: 0.0})
 	}else{

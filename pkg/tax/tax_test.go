@@ -21,7 +21,7 @@ func TestNetIncomeTax(t *testing.T){
 		{"net income: 3,000,000.0",3000000.0,660000.0},
 	}
 	for _,test := range tests{
-		tax := CreateTax(test.income+personalAllowance,0,personalAllowance)
+		tax := CreateTax(test.income+personalAllowance,0,personalAllowance,0)
 		want := test.want
 		got := tax.NetIncomeTax()
 		if want != got {
@@ -45,7 +45,7 @@ func TestPayable(t *testing.T){
 	}
 	for _,test := range tests{
 		want := test.want
-		tax := CreateTax(test.totalIncome,test.wth,personalAllowance)
+		tax := CreateTax(test.totalIncome,test.wth,personalAllowance,0)
 		got := tax.PayAble()
 		if want != got {
 			t.Errorf(" Expect \n%v\n, got \n%v", want, got)

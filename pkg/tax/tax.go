@@ -2,6 +2,8 @@ package tax
 
 import "math"
 
+var MAX_DONATION = 100000.0
+
 type TaxLadder struct {
 	Level string  `json:"level"`
 	Rate  float64 `json:"rate"`
@@ -12,13 +14,19 @@ type Tax struct {
 	totalIncome float64
 	wth float64
 	personalAllowance float64
+	donation float64
 }
-func CreateTax(totalIncome float64,wth float64,personalAllowance float64)*Tax{
-	return &Tax{totalIncome: totalIncome,wth: wth,personalAllowance:personalAllowance}
+type Allowance struct{
+	AllowanceType string `json:"donation"`
+	Amount float64 `json:"amount"`
+}
+func CreateTax(totalIncome float64,wth float64,personalAllowance float64,donation float64)*Tax{
+	return &Tax{totalIncome: totalIncome,wth: wth,personalAllowance:personalAllowance,donation: donation}
 }
 func (tax *Tax)NetIncome() float64{
-	return tax.totalIncome - tax.personalAllowance
+	return tax.totalIncome - tax.personalAllowance -math.Min(tax.donation,MAX_DONATION)
 }
+
 func (tax *Tax) NetIncomeTax() float64 {
 	netIncome:= tax.NetIncome()
 	res := 0.0
