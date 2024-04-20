@@ -1,46 +1,40 @@
 package main
 
-import "testing"
+import (
+	"net/http"
+	"net/http/httptest"
+	"strings"
+	"testing"
 
-func TestCalLadder(t *testing.T){
-	t.Parallel()
-	tests := []struct{
-		name string
-		income float64
-		want float64
+	"github.com/labstack/echo/v4"
+	"github.com/stretchr/testify/assert"
+)
 
-	}{
-		{"net income: 0",0.0,0.0},
-		{"net income: 150,000",150000.0,0.0},
-		{"net income: 500,000",500000.0,35000.0},
-		{"net income: 1,000,000",1000000.0,110000.0},
-		{"net income: 2,000,000",2000000.0,310000.0},
-		{"net income: 3,000,000.0",3000000.0,660000.0},
-	}
-	for _,test := range tests{
-		want := test.want
-		got := calNetIncomeTax(test.income)
-		if want != got {
-			t.Errorf("%s Expect \n%v\n, got \n%v",test.name, want, got)
-		}
-	}
-}
+var requestJSON = `{
+	"totalIncome": 500000.0,
+	"wht": 0.0,
+	"allowances": [
+	  {
+		"allowanceType": "donation",
+		"amount": 0.0
+	  }
+	]
+  }`
 
-func TestCalTax(t *testing.T){
-	t.Parallel()
-	tests := []struct{
-		income float64
-		want float64
+func TestCalTaxHandler(t *testing.T) {
+	// Setup
+	e := echo.New()
+	req := httptest.NewRequest(http.MethodPost, "/tax/calculations", strings.NewReader(requestJSON))
+	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+	rec := httptest.NewRecorder()
+	c := e.NewContext(req, rec)
+	resJSON := `{"tax":29000}`
+	
 
-	}{
-		{500000.0,29000.0},
-		{400000.0,19000.0},
-	}
-	for _,test := range tests{
-		want := test.want
-		got := calTax(test.income)
-		if want != got {
-			t.Errorf(" Expect \n%v\n, got \n%v", want, got)
-		}
+	// Assertions
+	if assert.NoError(t, calTaxHandler(c)) {
+		assert.Equal(t, http.StatusOK, rec.Code)
+		assert.Equal(t, resJSON, strings.TrimSpace(rec.Body.String()))
 	}
 }
+
