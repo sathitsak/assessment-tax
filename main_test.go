@@ -20,6 +20,10 @@ var requestJSON = `{
 	  }
 	]
   }`
+  var badRequestJSON = `{
+	"totalIncome": 500000.0,
+	
+  }`
 
 func TestCalTaxHandler(t *testing.T) {
 	// Setup
@@ -35,6 +39,21 @@ func TestCalTaxHandler(t *testing.T) {
 	if assert.NoError(t, calTaxHandler(c)) {
 		assert.Equal(t, http.StatusOK, rec.Code)
 		assert.Equal(t, resJSON, strings.TrimSpace(rec.Body.String()))
+	}
+}
+
+func TestBadRequest(t *testing.T) {
+	// Setup
+	e := echo.New()
+	req := httptest.NewRequest(http.MethodPost, "/tax/calculations", strings.NewReader(badRequestJSON))
+	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+	rec := httptest.NewRecorder()
+	c := e.NewContext(req, rec)
+	
+
+	// Assertions
+	if assert.NoError(t, calTaxHandler(c)) {
+		assert.Equal(t, http.StatusBadRequest, rec.Code)
 	}
 }
 

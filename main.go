@@ -22,9 +22,6 @@ func main() {
 	e := echo.New()
 	
 	e.POST("/tax/calculations", calTaxHandler)
-	e.GET("/", func(c echo.Context) error {
-		return c.String(http.StatusOK, "Hello, Go Bootcamp!")
-	})
 	e.Logger.Fatal(e.Start(fmt.Sprintf(":%s", port)))
 }
 type Allowance struct{
