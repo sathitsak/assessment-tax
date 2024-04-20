@@ -10,40 +10,37 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-var requestJSON = `{
-	"totalIncome": 500000.0,
-	"wht": 0.0,
-	"allowances": [
-	  {
-		"allowanceType": "donation",
-		"amount": 0.0
-	  }
-	]
-  }`
-  var badRequestJSON = `{
-	"totalIncome": 500000.0,
-	
-  }`
+
+  
 
 func TestCalTaxHandler(t *testing.T) {
-	// Setup
+	var requestJSON = `{
+		"totalIncome": 500000.0,
+		"wht": 0.0,
+		"allowances": [
+		  {
+			"allowanceType": "donation",
+			"amount": 0.0
+		  }
+		]
+	  }`
 	e := echo.New()
 	req := httptest.NewRequest(http.MethodPost, "/tax/calculations", strings.NewReader(requestJSON))
 	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 	rec := httptest.NewRecorder()
-	c := e.NewContext(req, rec)
-	resJSON := `{"tax":29000}`
-	
+	want := `{"tax":29000,"taxRefund":0}`
 
-	// Assertions
+	c := e.NewContext(req, rec)
+	
 	if assert.NoError(t, calTaxHandler(c)) {
 		assert.Equal(t, http.StatusOK, rec.Code)
-		assert.Equal(t, resJSON, strings.TrimSpace(rec.Body.String()))
+		assert.Equal(t, want, strings.TrimSpace(rec.Body.String()))
 	}
 }
 
 func TestBadRequest(t *testing.T) {
-	// Setup
+
+	var badRequestJSON = `{"totalIncome": 500000.0,}`
 	e := echo.New()
 	req := httptest.NewRequest(http.MethodPost, "/tax/calculations", strings.NewReader(badRequestJSON))
 	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
@@ -54,6 +51,31 @@ func TestBadRequest(t *testing.T) {
 	// Assertions
 	if assert.NoError(t, calTaxHandler(c)) {
 		assert.Equal(t, http.StatusBadRequest, rec.Code)
+	}
+}
+
+func TestTaxRefund(t *testing.T){
+	var requestJSON = `{
+		"totalIncome": 500000.0,
+		"wht": 39000.0,
+		"allowances": [
+		  {
+			"allowanceType": "donation",
+			"amount": 0.0
+		  }
+		]
+	  }`
+	e := echo.New()
+	req := httptest.NewRequest(http.MethodPost, "/tax/calculations", strings.NewReader(requestJSON))
+	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+	rec := httptest.NewRecorder()
+	want := `{"tax":0,"taxRefund":10000}`
+
+	c := e.NewContext(req, rec)
+	
+	if assert.NoError(t, calTaxHandler(c)) {
+		assert.Equal(t, http.StatusOK, rec.Code)
+		assert.Equal(t, want, strings.TrimSpace(rec.Body.String()))
 	}
 }
 

@@ -36,6 +36,7 @@ type Request struct{
 
 type Response struct{
 	Tax float64 `json:"tax" form:"tax"`
+	TaxRefund float64 `json:"taxRefund" form:"taxRefund"`
 }
 
 func calTaxHandler(c echo.Context) error {
@@ -43,9 +44,11 @@ func calTaxHandler(c echo.Context) error {
 	err := c.Bind(&req); if err != nil {
 		return c.String(http.StatusBadRequest, "bad request")
 	}
-	res := &Response{
-		Tax: tax.CalTax(req.TotalIncome),
+	tax := tax.CreateTax(req.TotalIncome,req.Wht,60000)
+	if tax.PayAble() >=0{
+		return c.JSON(http.StatusOK,&Response{Tax: tax.PayAble(), TaxRefund: 0.0})
+	}else{
+		return c.JSON(http.StatusOK,&Response{Tax: 0.0, TaxRefund: -tax.PayAble()})
 	}
 	
-  return c.JSON(http.StatusOK, res)
 }

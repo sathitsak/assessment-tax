@@ -4,8 +4,8 @@ import (
 	"testing"
 
 )
-
-func TestCalLadder(t *testing.T){
+var personalAllowance = 60000.0
+func TestNetIncomeTax(t *testing.T){
 	t.Parallel()
 	tests := []struct{
 		name string
@@ -21,27 +21,32 @@ func TestCalLadder(t *testing.T){
 		{"net income: 3,000,000.0",3000000.0,660000.0},
 	}
 	for _,test := range tests{
+		tax := CreateTax(test.income+personalAllowance,0,personalAllowance)
 		want := test.want
-		got := CalNetIncomeTax(test.income)
+		got := tax.NetIncomeTax()
 		if want != got {
 			t.Errorf("%s Expect \n%v\n, got \n%v",test.name, want, got)
 		}
 	}
 }
 
-func TestCalTax(t *testing.T){
+func TestPayable(t *testing.T){
 	t.Parallel()
 	tests := []struct{
-		income float64
+		totalIncome float64
+		wth float64
 		want float64
 
 	}{
-		{500000.0,29000.0},
-		{400000.0,19000.0},
+		{500000.0,0,29000.0},
+		{400000.0,0,19000.0},
+		{500000.0,25000.0,4000.0},
+		{500000.0,39000.0,-10000.0},
 	}
 	for _,test := range tests{
 		want := test.want
-		got := CalTax(test.income)
+		tax := CreateTax(test.totalIncome,test.wth,personalAllowance)
+		got := tax.PayAble()
 		if want != got {
 			t.Errorf(" Expect \n%v\n, got \n%v", want, got)
 		}

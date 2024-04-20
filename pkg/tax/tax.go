@@ -8,8 +8,19 @@ type TaxLadder struct {
 	Max   float64 `json:"max"`
 	Min   float64 `json:"min"`
 }
-
-func CalNetIncomeTax(income float64) float64 {
+type Tax struct {
+	totalIncome float64
+	wth float64
+	personalAllowance float64
+}
+func CreateTax(totalIncome float64,wth float64,personalAllowance float64)*Tax{
+	return &Tax{totalIncome: totalIncome,wth: wth,personalAllowance:personalAllowance}
+}
+func (tax *Tax)NetIncome() float64{
+	return tax.totalIncome - tax.personalAllowance
+}
+func (tax *Tax) NetIncomeTax() float64 {
+	netIncome:= tax.NetIncome()
 	res := 0.0
 	ladders := []TaxLadder{
 		{Level: "0-150,000", Rate: 0.0, Max: 150000.0, Min: 0.0},
@@ -19,16 +30,16 @@ func CalNetIncomeTax(income float64) float64 {
 		{Level: "2,000,001 ขึ้นไป", Rate: 0.35, Max: math.Inf(1), Min: 2000000.0},
 	}
 	for _, ladder := range ladders {
-		if income >= ladder.Max {
+		if netIncome >= ladder.Max {
 			res += (ladder.Max - ladder.Min) * ladder.Rate
 		} else {
-			res += (income - ladder.Min) * ladder.Rate
+			res += (netIncome - ladder.Min) * ladder.Rate
 			return res
 		}
 
 	}
 	return res
 }
-func CalTax(totalIncome float64) float64 {
-	return CalNetIncomeTax(totalIncome - 60000.0)
+func (tax *Tax) PayAble() float64 {
+	return tax.NetIncomeTax()-tax.wth
 }
