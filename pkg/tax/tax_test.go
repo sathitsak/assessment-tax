@@ -2,7 +2,6 @@ package tax
 
 import (
 	"testing"
-
 )
 var personalAllowance = 60000.0
 func TestNetIncomeTax(t *testing.T){
@@ -21,7 +20,7 @@ func TestNetIncomeTax(t *testing.T){
 		{"net income: 3,000,000.0",3000000.0,660000.0},
 	}
 	for _,test := range tests{
-		tax := CreateTax(test.income+personalAllowance,0,personalAllowance)
+		tax := CreateTax(test.income,0,0,0)
 		want := test.want
 		got := tax.NetIncomeTax()
 		if want != got {
@@ -30,7 +29,7 @@ func TestNetIncomeTax(t *testing.T){
 	}
 }
 
-func TestPayable(t *testing.T){
+func TestWth(t *testing.T){
 	t.Parallel()
 	tests := []struct{
 		totalIncome float64
@@ -45,7 +44,31 @@ func TestPayable(t *testing.T){
 	}
 	for _,test := range tests{
 		want := test.want
-		tax := CreateTax(test.totalIncome,test.wth,personalAllowance)
+		tax := CreateTax(test.totalIncome,test.wth,personalAllowance,0)
+		got := tax.PayAble()
+		if want != got {
+			t.Errorf(" Expect \n%v\n, got \n%v", want, got)
+		}
+	}
+}
+func TestDonation(t *testing.T){
+	t.Parallel()
+	tests := []struct{
+		totalIncome float64
+		donation float64
+		want float64
+
+	}{
+		
+		{500000.0,200000.0,19000.0},
+		{500000.0,100000.0,19000.0},
+		{500000.0,50000.0,24000.0},
+		{500000.0,0.0,29000.0},
+		
+	}
+	for _,test := range tests{
+		want := test.want
+		tax := CreateTax(test.totalIncome,0.0,personalAllowance,test.donation)
 		got := tax.PayAble()
 		if want != got {
 			t.Errorf(" Expect \n%v\n, got \n%v", want, got)
