@@ -1,4 +1,4 @@
-package main
+package handler
 
 import (
 	"encoding/json"
@@ -69,9 +69,9 @@ func TestBadRequest(t *testing.T) {
 	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 	rec := httptest.NewRecorder()
 	c := e.NewContext(req, rec)
-
+	h := CreateHandler()
 	// Assertions
-	if assert.NoError(t, calTaxHandler(c)) {
+	if assert.NoError(t, h.CalTaxHandler(c)) {
 		assert.Equal(t, http.StatusBadRequest, rec.Code)
 	}
 }
@@ -98,7 +98,7 @@ func TestTaxRefund(t *testing.T) {
 
 	if assert.NoError(t, ResponseToJSON(c, rec, &got)) {
 		assert.Equal(t, http.StatusOK, rec.Code)
-		assert.Equal(t, want, got.TaxRefund)
+		assert.Equal(t, want, float64(got.TaxRefund))
 	}
 }
 
@@ -122,13 +122,14 @@ func TestDonation(t *testing.T) {
 	var got Response
 
 	if assert.NoError(t, ResponseToJSON(c, rec, &got)) {
-		assert.Equal(t, want, got.Tax)
+		assert.Equal(t, want, float64(got.Tax))
 		assert.Equal(t, http.StatusOK, rec.Code)
 	}
 }
 
 func ResponseToJSON(c echo.Context, rec *httptest.ResponseRecorder, data *Response) error {
-	if err := calTaxHandler(c); err != nil {
+	h := CreateHandler()
+	if err := h.CalTaxHandler(c); err != nil {
 		return err
 	}
 	if err := json.Unmarshal(rec.Body.Bytes(), &data); err != nil {
