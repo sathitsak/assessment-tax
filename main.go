@@ -26,7 +26,7 @@ func main() {
 	e.Logger.Fatal(e.Start(fmt.Sprintf(":%s", port)))
 }
 type Allowance struct{
-	AllowanceType string `json:"donation"`
+	AllowanceType string `json:"allowanceType"`
 	Amount float64 `json:"amount"`
 }
 type Request struct{
@@ -57,7 +57,7 @@ func calTaxHandler(c echo.Context) error {
 		return c.String(http.StatusBadRequest, "bad request")
 	}
 	tax := tax.CreateTax(req.TotalIncome,req.Wht,PERSONAL_ALLOWANCE,req.Donation())
-	if tax.PayAble() >=0{
+	if tax.PayAble() >=0 {
 		return c.JSON(http.StatusOK,&Response{Tax: tax.PayAble(), TaxRefund: 0.0})
 	}else{
 		return c.JSON(http.StatusOK,&Response{Tax: 0.0, TaxRefund: -tax.PayAble()})

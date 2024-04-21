@@ -79,3 +79,27 @@ func TestTaxRefund(t *testing.T){
 	}
 }
 
+func TestDonation(t *testing.T){
+	var requestJSON = `{
+		"totalIncome": 500000.0,
+		"wht": 0.0,
+		"allowances": [
+		  {
+			"allowanceType": "donation",
+			"amount": 200000.0
+		  }
+		]
+	  }`
+	  e := echo.New()
+	  req := httptest.NewRequest(http.MethodPost, "/tax/calculations", strings.NewReader(requestJSON))
+	  req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+	  rec := httptest.NewRecorder()
+	  want := `{"tax":19000,"taxRefund":0}`
+  
+	  c := e.NewContext(req, rec)
+	  
+	  if assert.NoError(t, calTaxHandler(c)) {
+		  assert.Equal(t, http.StatusOK, rec.Code)
+		  assert.Equal(t, want, strings.TrimSpace(rec.Body.String()))
+	  }  
+}
