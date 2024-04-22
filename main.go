@@ -26,18 +26,10 @@ func main() {
   }
 	port := os.Getenv("PORT")
 	dbURL := os.Getenv("DATABASE_URL")
-	db, err := sql.Open("postgres", dbURL)
-    if err != nil {
-        log.Fatal(err)
-    }
-    defer db.Close()
-
-    // Check the connection
-    err = db.Ping()
-    if err != nil {
-        log.Fatal(err)
-    }
-
+	db,err := NewDB(dbURL)
+	if err != nil {
+		log.Fatal("Error loading .env file")
+	}
     log.Println("Successfully connected!")
 	s := Server{db:db}
 	s.createTable()
@@ -48,6 +40,7 @@ func main() {
 	e.POST("/admin/deductions/personal",s.setPersonalAllowance)
 
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
+	defer db.Close()
 	defer stop()
 	// Start server
 	go func() {
@@ -97,8 +90,7 @@ func (s *Server) setPersonalAllowance (c echo.Context) error {
 	if pa.Amount < 10000.0 {
 		return c.String(http.StatusBadRequest, "The amount provided is below the minimum allowed limit.")
 	}
-	query := fmt.Sprintf("INSERT INTO personal_allowance (amount) VALUES (%f);",pa.Amount)
-	_,err := s.db.Exec(query)
+	_,err := s.InsertPersonalAllowance(pa.Amount)
 	if  err != nil {
 		return c.String(http.StatusInternalServerError, "Internal server error please contact admin or try again later")
 	}
@@ -116,14 +108,54 @@ func (s *Server)seedTable(){
     err := row.Scan(&amount)
     if err != nil {
         if err == sql.ErrNoRows {
-			s.db.Exec(`INSERT INTO personal_allowance (amount)
-			VALUES (60000.0); `)
-            fmt.Println("No rows were returned!")
+			_,err:= s.InsertPersonalAllowance(60000.0)
+            if err != nil {
+				log.Fatal(err)
+			}
         } else {
-            log.Fatal(err)
-        }
-    } else {
-        fmt.Printf("current amount: %f", amount)
-    }
+            log.Fatal(err)}
+    } 
 }
 
+func (s *Server)ReadPersonalAllowance() (float64, error){
+	var amount float64
+	query := `SELECT amount FROM personal_allowance  ORDER BY created_at DESC LIMIT 1;`
+	row := s.db.QueryRow(query)
+    err := row.Scan(&amount)
+	if err != nil{
+		if err ==  sql.ErrNoRows{
+			return 60000.0,nil
+		}else{
+			return amount,err
+		}
+	}
+	return amount, err
+}
+
+func (s *Server)InsertPersonalAllowance(amount float64) (int64, error){
+	query := fmt.Sprintf("INSERT INTO personal_allowance (amount) VALUES (%f);",amount)
+	res,err:= s.db.Exec(query)
+	if err != nil {
+		return 0,err
+	}
+	return res.LastInsertId()
+	
+}
+
+func NewDB(dbURL string)(*sql.DB,error){
+	  
+	  db, err := sql.Open("postgres", dbURL)
+	  if err != nil {
+		  log.Fatal(err)
+		  return nil,err
+	  }
+	  
+  
+	  // Check the connection
+	  err = db.Ping()
+	  if err != nil {
+		  log.Fatal(err)
+		  return nil,err
+	  }
+	  return db,nil
+}
