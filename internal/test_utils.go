@@ -3,12 +3,10 @@ package internal
 import (
 	"database/sql"
 	"log"
-	"os"
 	"testing"
 
 	_ "github.com/lib/pq"
 
-	"github.com/joho/godotenv"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -44,13 +42,7 @@ func dropTestTable(db *sql.DB) {
 	}
 }
 func createTestDB() (*sql.DB, error) {
-	err := godotenv.Load()
-	if err != nil {
-		log.Fatal("Error loading .env file")
-	}
-
-	dbURL := os.Getenv("DATABASE_URL")
-	db, err := sql.Open("postgres", dbURL)
+	db, err := sql.Open("postgres", "postgres://root:password@localhost:15432/test_db?sslmode=disable")
 
 	if err != nil {
 		log.Fatal(err)

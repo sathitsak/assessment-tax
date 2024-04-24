@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
@@ -9,6 +10,7 @@ import (
 
 	"github.com/labstack/echo/v4"
 	"github.com/sathitsak/assessment-tax/internal"
+	"github.com/sathitsak/assessment-tax/middleware"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -73,13 +75,14 @@ func TestPersonalAllowanceHandler(t *testing.T) {
 	  }`
 	e := echo.New()
 	req := httptest.NewRequest(http.MethodPost, "/admin/deductions/personal", strings.NewReader(requestJSON))
+	auth := base64.StdEncoding.EncodeToString([]byte("adminTax:admin!"))
 	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+	req.Header.Set("Authorization", "Basic "+auth)
 	rec := httptest.NewRecorder()
 	c := e.NewContext(req, rec)
 	db,teardown:= internal.SetupTestDB(t)
 	defer teardown()
 	h:= CreateHandler(db)
-
 
 	if assert.NoError(t, h.PersonalAllowanceHandler(c)) {
 		assert.Equal(t, http.StatusOK, rec.Code)
@@ -93,6 +96,25 @@ func TestPersonalAllowanceHandler(t *testing.T) {
 
 }
 
+
+
+func TestPerosnalAllowanceBadRequest(t *testing.T) {
+	var requestJSON = `{}`
+	e := echo.New()
+	req := httptest.NewRequest(http.MethodPost, "/admin/deductions/personal", strings.NewReader(requestJSON))
+	auth := base64.StdEncoding.EncodeToString([]byte("adminTax:admin!"))
+	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+	req.Header.Set("Authorization", "Basic "+auth)
+	rec := httptest.NewRecorder()
+	c := e.NewContext(req, rec)
+	db,teardown:= internal.SetupTestDB(t)
+	defer teardown()
+	h:= CreateHandler(db)
+	if assert.NoError(t, h.PersonalAllowanceHandler(c)) {
+		assert.Equal(t, http.StatusBadRequest, rec.Code)
+	}
+	
+}
 func TestBadRequest(t *testing.T) {
 
 	var badRequestJSON = `{"totalIncome": 500000.0,}`
@@ -167,3 +189,19 @@ func TestDonation(t *testing.T) {
 	}
 }
 
+func TestAdminWrongCredential(t *testing.T) {
+	var requestJSON = `{}`
+	req := httptest.NewRequest(http.MethodPost, "/admin/deductions/personal", strings.NewReader(requestJSON))
+	auth := base64.StdEncoding.EncodeToString([]byte("adminTaxx:adminn!"))
+	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+	req.Header.Set("Authorization", "Basic "+auth)
+	rec := httptest.NewRecorder()
+	db, teardown := internal.SetupTestDB(t)
+	defer teardown()
+	h := CreateHandler(db)
+	e := echo.New()
+	e.Use(middleware.ValidateBasicAuth("adminTax", "admin!"))
+	e.POST("/admin/deductions/personal", h.PersonalAllowanceHandler)
+	e.ServeHTTP(rec, req)
+	assert.Equal(t, http.StatusUnauthorized, rec.Code)
+}

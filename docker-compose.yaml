@@ -1,15 +1,13 @@
-version: '3'
+version: '3.8'
 
 services:
-    postgres:
-        image: postgres:16.0
-        environment:
-            POSTGRES_DB: product_master
-            POSTGRES_USER: root
-            POSTGRES_PASSWORD: password
-      
-        ports:
-            - "15432:5432"
-
-volumes:
-    pgdata:
+  postgres:
+    image: postgres:latest
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: adminpassword
+      POSTGRES_DB: defaultdb
+    volumes:
+      - ./init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
+    ports:
+      - "15432:5432"
