@@ -5,6 +5,8 @@ import (
 	"net/http"
 
 	"github.com/labstack/echo/v4"
+	"github.com/sathitsak/assessment-tax/pkg/db"
+	"github.com/sathitsak/assessment-tax/pkg/repositories"
 	"github.com/sathitsak/assessment-tax/pkg/tax"
 )
 var PERSONAL_ALLOWANCE = 60000.0
@@ -54,7 +56,16 @@ func (h *handler)CalTaxHandler(c echo.Context) error {
 	if err != nil {
 		return c.String(http.StatusBadRequest, "bad request")
 	}
-	tax := tax.CreateTax(req.TotalIncome, req.Wht, PERSONAL_ALLOWANCE, req.Donation())
+	db,err := db.New()
+	if err != nil {
+		return c.String(http.StatusInternalServerError, "Internal server error please contact admin or try again later")
+	}
+	
+	pa,err := repositories.ReadPersonalAllowance(db)
+	if err != nil {
+		return c.String(http.StatusInternalServerError, "Internal server error please contact admin or try again later")
+	}
+	tax := tax.CreateTax(req.TotalIncome, req.Wht, pa, req.Donation())
 	taxLevel := []TaxLevel{}
 	for _, v := range tax.TaxLevel() {
 		taxLevel = append(taxLevel, TaxLevel{Level: v.Level, Tax: Decimal(v.Tax)})
@@ -65,4 +76,33 @@ func (h *handler)CalTaxHandler(c echo.Context) error {
 		return c.JSON(http.StatusOK, &Response{Tax: 0.0, TaxRefund: Decimal(-tax.PayAble()), TaxLevel: taxLevel})
 	}
 
+}
+
+
+type PersonalAllowance struct{
+	Amount float64 `json:"amount" form:"amount"`
+}
+
+func (h *handler) PersonalAllowanceHandler (c echo.Context) error {
+	var pa PersonalAllowance
+	if err := c.Bind(&pa); err != nil{
+		return c.String(http.StatusBadRequest, "bad request")
+	}
+	fmt.Println(pa.Amount)
+	if pa.Amount > 100000.0  {
+		return c.String(http.StatusBadRequest, "The amount provided exceeds the maximum allowed limit.")
+	}
+	if pa.Amount < 10000.0 {
+		return c.String(http.StatusBadRequest, "The amount provided is below the minimum allowed limit.")
+	}
+	db,err := db.New()
+	defer db.Close()
+	if err != nil {
+		return c.String(http.StatusInternalServerError, "Internal server error please contact admin or try again later")
+	}
+	_,err = repositories.CreatePersonalAllowance(db,pa.Amount)
+	if  err != nil {
+		return c.String(http.StatusInternalServerError, "Internal server error please contact admin or try again later")
+	}
+	return c.JSON(http.StatusAccepted,pa)
 }
