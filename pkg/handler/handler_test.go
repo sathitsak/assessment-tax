@@ -66,6 +66,7 @@ func TestCalTaxHandler(t *testing.T) {
 
 }
 
+
 func TestPersonalAllowanceHandler(t *testing.T) {
 	var requestJSON = `{
 		"amount": 70000.0
@@ -88,6 +89,7 @@ func TestPersonalAllowanceHandler(t *testing.T) {
 		assert.Equal(t,70000.0,amount)
 
 	}
+	
 
 }
 
