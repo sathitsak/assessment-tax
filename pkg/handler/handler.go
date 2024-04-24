@@ -1,10 +1,13 @@
 package handler
 
 import (
+	"database/sql"
 	"fmt"
 	"net/http"
 
 	"github.com/labstack/echo/v4"
+	"github.com/sathitsak/assessment-tax/pkg/db"
+	"github.com/sathitsak/assessment-tax/pkg/models"
 	"github.com/sathitsak/assessment-tax/pkg/tax"
 )
 var PERSONAL_ALLOWANCE = 60000.0
@@ -19,7 +22,9 @@ type Request struct {
 	Allowances  []Allowance `json:"allowances"`
 }
 
-type handler struct{}
+type handler struct{
+	personalAllowance models.PersonalAllowanceInterface
+}
 
 func (req *Request) Donation() float64 {
 	donation := 0.0
@@ -41,8 +46,10 @@ type TaxLevel struct {
 	Level string  `json:"level"`
 	Tax   Decimal `json:"tax"`
 }
-func CreateHandler()handler{
-	return handler{}
+func CreateHandler(db *sql.DB)handler{
+	return handler{
+		personalAllowance: &models.PersonalAllowanceModel{DB: db},
+	}
 }
 func (d Decimal) MarshalJSON() ([]byte, error) {
 	// Always format with one decimal place
@@ -54,7 +61,13 @@ func (h *handler)CalTaxHandler(c echo.Context) error {
 	if err != nil {
 		return c.String(http.StatusBadRequest, "bad request")
 	}
-	tax := tax.CreateTax(req.TotalIncome, req.Wht, PERSONAL_ALLOWANCE, req.Donation())
+	
+	
+	pa,err := h.personalAllowance.Read()
+	if err != nil {
+		return c.String(http.StatusInternalServerError, "Internal server error please contact admin or try again later")
+	}
+	tax := tax.CreateTax(req.TotalIncome, req.Wht, pa, req.Donation())
 	taxLevel := []TaxLevel{}
 	for _, v := range tax.TaxLevel() {
 		taxLevel = append(taxLevel, TaxLevel{Level: v.Level, Tax: Decimal(v.Tax)})
@@ -65,4 +78,33 @@ func (h *handler)CalTaxHandler(c echo.Context) error {
 		return c.JSON(http.StatusOK, &Response{Tax: 0.0, TaxRefund: Decimal(-tax.PayAble()), TaxLevel: taxLevel})
 	}
 
+}
+
+
+type PersonalAllowance struct{
+	Amount float64 `json:"amount" form:"amount"`
+}
+
+func (h *handler) PersonalAllowanceHandler (c echo.Context) error {
+	var pa PersonalAllowance
+	if err := c.Bind(&pa); err != nil{
+		return c.String(http.StatusBadRequest, "bad request")
+	}
+	fmt.Println(pa.Amount)
+	if pa.Amount > 100000.0  {
+		return c.String(http.StatusBadRequest, "The amount provided exceeds the maximum allowed limit.")
+	}
+	if pa.Amount < 10000.0 {
+		return c.String(http.StatusBadRequest, "The amount provided is below the minimum allowed limit.")
+	}
+	db,err := db.New()
+	defer db.Close()
+	if err != nil {
+		return c.String(http.StatusInternalServerError, "Internal server error please contact admin or try again later")
+	}
+	err = h.personalAllowance.Create(pa.Amount)
+	if  err != nil {
+		return c.String(http.StatusInternalServerError, "Internal server error please contact admin or try again later")
+	}
+	return c.JSON(http.StatusOK,pa)
 }
