@@ -6,7 +6,6 @@ import (
 	"net/http"
 
 	"github.com/labstack/echo/v4"
-	"github.com/sathitsak/assessment-tax/pkg/db"
 	"github.com/sathitsak/assessment-tax/pkg/models"
 	"github.com/sathitsak/assessment-tax/pkg/tax"
 )
@@ -97,12 +96,7 @@ func (h *handler) PersonalAllowanceHandler (c echo.Context) error {
 	if pa.Amount < 10000.0 {
 		return c.String(http.StatusBadRequest, "The amount provided is below the minimum allowed limit.")
 	}
-	db,err := db.New()
-	defer db.Close()
-	if err != nil {
-		return c.String(http.StatusInternalServerError, "Internal server error please contact admin or try again later")
-	}
-	err = h.personalAllowance.Create(pa.Amount)
+	err := h.personalAllowance.Create(pa.Amount)
 	if  err != nil {
 		return c.String(http.StatusInternalServerError, "Internal server error please contact admin or try again later")
 	}

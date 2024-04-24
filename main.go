@@ -9,10 +9,12 @@ import (
 	"os/signal"
 	"time"
 
-
 	"github.com/joho/godotenv"
 	"github.com/labstack/echo/v4"
+
+	// "github.com/labstack/echo/v4/middleware"
 	_ "github.com/lib/pq"
+	"github.com/sathitsak/assessment-tax/middleware"
 	"github.com/sathitsak/assessment-tax/pkg/db"
 	"github.com/sathitsak/assessment-tax/pkg/handler"
 )
@@ -25,19 +27,21 @@ func main() {
 	  log.Fatal("Error loading .env file")
 	}
 	port := os.Getenv("PORT")
-	
-	if err := db.Prepare(); err != nil {
+	dbURL := os.Getenv("DATABASE_URL")
+	adminID := os.Getenv("ADMIN_USERNAME")
+	adminPassword := os.Getenv("ADMIN_PASSWORD")
+	db,err := db.New(dbURL)
+	if err != nil  {
 		log.Fatal("can't connect to db")
 	}
 	e := echo.New()
-	db,err := db.New()
-	if err != nil {
-		log.Fatal("can't connect to db")
-	}
+	
 	h := handler.CreateHandler(db)
 	e.POST("/tax/calculations", h.CalTaxHandler)
-	e.POST("/admin/deductions/personal",h.PersonalAllowanceHandler)
-
+	g := e.Group("/admin")
+	g.Use(middleware.ValidateBasicAuth(adminID, adminPassword))
+	g.POST("/deductions/personal",h.PersonalAllowanceHandler)
+	
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
 	
 	defer stop()
@@ -56,4 +60,5 @@ func main() {
 		e.Logger.Fatal(err)
 	}
 }
+
 
