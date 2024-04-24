@@ -25,11 +25,16 @@ func main() {
 	  log.Fatal("Error loading .env file")
 	}
 	port := os.Getenv("PORT")
+	
 	if err := db.Prepare(); err != nil {
 		log.Fatal("can't connect to db")
 	}
 	e := echo.New()
-	h := handler.CreateHandler()
+	db,err := db.New()
+	if err != nil {
+		log.Fatal("can't connect to db")
+	}
+	h := handler.CreateHandler(db)
 	e.POST("/tax/calculations", h.CalTaxHandler)
 	e.POST("/admin/deductions/personal",h.PersonalAllowanceHandler)
 

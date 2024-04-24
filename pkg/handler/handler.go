@@ -1,12 +1,13 @@
 package handler
 
 import (
+	"database/sql"
 	"fmt"
 	"net/http"
 
 	"github.com/labstack/echo/v4"
 	"github.com/sathitsak/assessment-tax/pkg/db"
-	"github.com/sathitsak/assessment-tax/pkg/repositories"
+	"github.com/sathitsak/assessment-tax/pkg/models"
 	"github.com/sathitsak/assessment-tax/pkg/tax"
 )
 var PERSONAL_ALLOWANCE = 60000.0
@@ -21,7 +22,9 @@ type Request struct {
 	Allowances  []Allowance `json:"allowances"`
 }
 
-type handler struct{}
+type handler struct{
+	personalAllowance models.PersonalAllowanceInterface
+}
 
 func (req *Request) Donation() float64 {
 	donation := 0.0
@@ -43,8 +46,10 @@ type TaxLevel struct {
 	Level string  `json:"level"`
 	Tax   Decimal `json:"tax"`
 }
-func CreateHandler()handler{
-	return handler{}
+func CreateHandler(db *sql.DB)handler{
+	return handler{
+		personalAllowance: &models.PersonalAllowanceModel{DB: db},
+	}
 }
 func (d Decimal) MarshalJSON() ([]byte, error) {
 	// Always format with one decimal place
@@ -56,12 +61,9 @@ func (h *handler)CalTaxHandler(c echo.Context) error {
 	if err != nil {
 		return c.String(http.StatusBadRequest, "bad request")
 	}
-	db,err := db.New()
-	if err != nil {
-		return c.String(http.StatusInternalServerError, "Internal server error please contact admin or try again later")
-	}
 	
-	pa,err := repositories.ReadPersonalAllowance(db)
+	
+	pa,err := h.personalAllowance.Read()
 	if err != nil {
 		return c.String(http.StatusInternalServerError, "Internal server error please contact admin or try again later")
 	}
@@ -100,9 +102,9 @@ func (h *handler) PersonalAllowanceHandler (c echo.Context) error {
 	if err != nil {
 		return c.String(http.StatusInternalServerError, "Internal server error please contact admin or try again later")
 	}
-	_,err = repositories.CreatePersonalAllowance(db,pa.Amount)
+	err = h.personalAllowance.Create(pa.Amount)
 	if  err != nil {
 		return c.String(http.StatusInternalServerError, "Internal server error please contact admin or try again later")
 	}
-	return c.JSON(http.StatusAccepted,pa)
+	return c.JSON(http.StatusOK,pa)
 }

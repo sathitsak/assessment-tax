@@ -15,6 +15,8 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/sathitsak/assessment-tax/pkg/handler"
 	"github.com/stretchr/testify/assert"
+	"github.com/sathitsak/assessment-tax/internal"
+
 )
 
 func TestBadRequest(t *testing.T){
@@ -41,11 +43,13 @@ func TestBadRequest(t *testing.T){
 		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 		rec := httptest.NewRecorder()
 		c := e.NewContext(req, rec)
-		h := handler.CreateHandler()
+		db, teardown := internal.SetupTestDB(t)
+		h := handler.CreateHandler(db)
 		// Assertions
 		if assert.NoError(t, h.PersonalAllowanceHandler(c)) {
 			assert.Equal(t, http.StatusBadRequest, rec.Code)
 		}
+		teardown()
 	}
 }
 

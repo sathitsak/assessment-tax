@@ -4,10 +4,10 @@ services:
     postgres:
         image: postgres:16.0
         environment:
-            POSTGRES_DB: product_master
+            POSTGRES_DB: test_db
             POSTGRES_USER: root
             POSTGRES_PASSWORD: password
-      
+        
         ports:
             - "15432:5432"
 
