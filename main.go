@@ -24,26 +24,27 @@ var PERSONAL_ALLOWANCE = 60000.0
 func main() {
 	err := godotenv.Load()
 	if err != nil {
-	  log.Fatal("Error loading .env file")
+		log.Fatal("Error loading .env file")
 	}
 	port := os.Getenv("PORT")
 	dbURL := os.Getenv("DATABASE_URL")
 	adminID := os.Getenv("ADMIN_USERNAME")
 	adminPassword := os.Getenv("ADMIN_PASSWORD")
-	db,err := db.New(dbURL)
-	if err != nil  {
+	db, err := db.New(dbURL)
+	if err != nil {
 		log.Fatal("can't connect to db")
 	}
 	e := echo.New()
-	
+
 	h := handler.CreateHandler(db)
 	e.POST("/tax/calculations", h.CalTaxHandler)
+	e.POST("/tax/calculations/upload-csv", h.HandleFileUpload)
 	g := e.Group("/admin")
 	g.Use(middleware.ValidateBasicAuth(adminID, adminPassword))
-	g.POST("/deductions/personal",h.PersonalAllowanceHandler)
-	
+	g.POST("/deductions/personal", h.PersonalAllowanceHandler)
+
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
-	
+
 	defer stop()
 	// Start server
 	go func() {
@@ -60,5 +61,6 @@ func main() {
 		e.Logger.Fatal(err)
 	}
 }
+
 
 

@@ -3,6 +3,7 @@ package handler
 import (
 	"database/sql"
 	"fmt"
+	
 	"net/http"
 
 	"github.com/labstack/echo/v4"
@@ -105,3 +106,4 @@ func (h *handler) PersonalAllowanceHandler (c echo.Context) error {
 	}
 	return c.JSON(http.StatusOK,PersonalAllowanceResponse{pa.Amount})
 }
+
