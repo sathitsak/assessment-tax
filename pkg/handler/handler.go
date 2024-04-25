@@ -3,7 +3,7 @@ package handler
 import (
 	"database/sql"
 	"fmt"
-	
+
 	"net/http"
 
 	"github.com/labstack/echo/v4"
@@ -36,6 +36,17 @@ func (req *Request) Donation() float64 {
 	return donation
 }
 
+func (req *Request) KReceipt() float64 {
+	kReceipt := 0.0
+	for _, v := range req.Allowances {
+		if v.AllowanceType == "k-receipt" {
+			kReceipt += v.Amount
+		}
+	}
+	
+	return kReceipt
+} 
+
 type Response struct {
 	Tax       Decimal    `json:"tax" form:"tax"`
 	TaxRefund Decimal    `json:"taxRefund" form:"taxRefund"`
@@ -67,7 +78,7 @@ func (h *handler)CalTaxHandler(c echo.Context) error {
 	if err != nil {
 		return c.String(http.StatusInternalServerError, "Internal server error please contact admin or try again later")
 	}
-	tax := tax.CreateTax(req.TotalIncome, req.Wht, pa, req.Donation())
+	tax := tax.CreateTax(req.TotalIncome, req.Wht, pa, req.Donation(),req.KReceipt())
 	taxLevel := []TaxLevel{}
 	for _, v := range tax.TaxLevel() {
 		taxLevel = append(taxLevel, TaxLevel{Level: v.Level, Tax: Decimal(v.Tax)})
