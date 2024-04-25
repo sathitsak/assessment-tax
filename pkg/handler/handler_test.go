@@ -18,10 +18,14 @@ func TestCalTaxHandler(t *testing.T) {
 		"totalIncome": 500000.0,
 		"wht": 0.0,
 		"allowances": [
-		  {
-			"allowanceType": "donation",
-			"amount": 200000.0
-		  }
+			{
+				"allowanceType": "k-receipt",
+				"amount": 200000.0
+			  },
+			  {
+				"allowanceType": "donation",
+				"amount": 100000.0
+			  }
 		]
 	  }`
 	e := echo.New()
@@ -29,7 +33,7 @@ func TestCalTaxHandler(t *testing.T) {
 	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 	rec := httptest.NewRecorder()
 	want := Response{
-		Tax: 19000.0,
+		Tax: 14000.0,
 		TaxLevel: []TaxLevel{
 			{
 				Level: "0-150,000",
@@ -37,7 +41,7 @@ func TestCalTaxHandler(t *testing.T) {
 			},
 			{
 				Level: "150,001-500,000",
-				Tax:   19000.0,
+				Tax:   14000.0,
 			},
 			{
 				Level: "500,001-1,000,000",

@@ -3,6 +3,8 @@ package tax
 import "math"
 
 var MAX_DONATION = 100000.0
+var MAX_K_RECEIPT = 50000.0
+
 var ladders = []TaxLadder{
 	{Level: "0-150,000", Rate: 0.0, Max: 150000.0, Min: 0.0},
 	{Level: "150,001-500,000", Rate: 0.1, Max: 500000.0, Min: 150000.0},
@@ -21,16 +23,17 @@ type Tax struct {
 	wth float64
 	personalAllowance float64
 	donation float64
+	kReceipt float64
 }
 type Allowance struct{
 	AllowanceType string `json:"donation"`
 	Amount float64 `json:"amount"`
 }
-func CreateTax(totalIncome float64,wth float64,personalAllowance float64,donation float64)*Tax{
-	return &Tax{totalIncome: totalIncome,wth: wth,personalAllowance:personalAllowance,donation: donation}
+func CreateTax(totalIncome float64,wth float64,personalAllowance float64,donation float64,kReceipt float64)*Tax{
+	return &Tax{totalIncome: totalIncome,wth: wth,personalAllowance:personalAllowance,donation: donation,kReceipt:kReceipt}
 }
 func (tax *Tax)NetIncome() float64{
-	return tax.totalIncome - tax.personalAllowance -math.Min(tax.donation,MAX_DONATION)
+	return tax.totalIncome - tax.personalAllowance -math.Min(tax.donation,MAX_DONATION) -math.Min(tax.kReceipt,MAX_K_RECEIPT)
 }
 
 func (tax *Tax) NetIncomeTax() float64 {
