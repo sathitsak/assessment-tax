@@ -83,6 +83,9 @@ func (h *handler)CalTaxHandler(c echo.Context) error {
 type PersonalAllowance struct{
 	Amount float64 `json:"amount" form:"amount"`
 }
+type PersonalAllowanceResponse struct{
+	PersonalDeduction float64 `json:"personalDeduction" form:"personalDeduction"`
+}
 
 func (h *handler) PersonalAllowanceHandler (c echo.Context) error {
 	var pa PersonalAllowance
@@ -100,5 +103,5 @@ func (h *handler) PersonalAllowanceHandler (c echo.Context) error {
 	if  err != nil {
 		return c.String(http.StatusInternalServerError, "Internal server error please contact admin or try again later")
 	}
-	return c.JSON(http.StatusOK,pa)
+	return c.JSON(http.StatusOK,PersonalAllowanceResponse{pa.Amount})
 }
