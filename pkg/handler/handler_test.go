@@ -82,9 +82,13 @@ func TestPersonalAllowanceHandler(t *testing.T) {
 	db,teardown:= internal.SetupTestDB(t)
 	defer teardown()
 	h:= CreateHandler(db)
-
-	if assert.NoError(t, h.PersonalAllowanceHandler(c)) {
+	 want := PersonalAllowanceResponse{
+		PersonalDeduction: 70000.0,
+	 }
+	 var got PersonalAllowanceResponse
+	if assert.NoError(t, h.PersonalAllowanceHandler(c),json.Unmarshal(rec.Body.Bytes(), &got)) {
 		assert.Equal(t, http.StatusOK, rec.Code)
+		assert.Equal(t,got,want)
 	}
 	amount,err := h.personalAllowance.Read()
 	if assert.NoError(t,err){
