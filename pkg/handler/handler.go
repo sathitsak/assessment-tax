@@ -17,9 +17,9 @@ type Allowance struct {
 	Amount        float64 `json:"amount"`
 }
 type Request struct {
-	TotalIncome float64     `json:"totalIncome"`
-	Wht         float64     `json:"wht"`
-	Allowances  []Allowance `json:"allowances"`
+	TotalIncome *float64     `json:"totalIncome"`
+	Wht         *float64     `json:"wht"`
+	Allowances  *[]Allowance `json:"allowances"`
 }
 
 type handler struct{
@@ -28,7 +28,7 @@ type handler struct{
 
 func (req *Request) Donation() float64 {
 	donation := 0.0
-	for _, v := range req.Allowances {
+	for _, v := range *req.Allowances {
 		if v.AllowanceType == "donation" {
 			donation += v.Amount
 		}
@@ -38,7 +38,7 @@ func (req *Request) Donation() float64 {
 
 func (req *Request) KReceipt() float64 {
 	kReceipt := 0.0
-	for _, v := range req.Allowances {
+	for _, v := range *req.Allowances {
 		if v.AllowanceType == "k-receipt" {
 			kReceipt += v.Amount
 		}
@@ -70,15 +70,22 @@ func (h *handler)CalTaxHandler(c echo.Context) error {
 	var req Request
 	err := c.Bind(&req)
 	if err != nil {
-		return c.String(http.StatusBadRequest, "bad request")
+		return c.String(http.StatusBadRequest, "bad request bind error")
 	}
+	// if req.TotalIncome  == nil || req.Allowances == nil || req.Wht == nil {
+    //     return c.String(http.StatusBadRequest, "Bad Request: Missing required parameter")
+    // }
 	
-	
+	// for _,a := range *req.Allowances {
+	// 	if a.AllowanceType != "donation" && a.AllowanceType != "k-receipt"{
+	// 		return c.String(http.StatusBadRequest, "Bad Request: Allowances contain unknow type")
+	// 	}
+	// }
 	pa,err := h.personalAllowance.Read()
 	if err != nil {
 		return c.String(http.StatusInternalServerError, "Internal server error please contact admin or try again later")
 	}
-	tax := tax.CreateTax(req.TotalIncome, req.Wht, pa, req.Donation(),req.KReceipt())
+	tax := tax.CreateTax(*req.TotalIncome, *req.Wht, pa, req.Donation(),req.KReceipt())
 	taxLevel := []TaxLevel{}
 	for _, v := range tax.TaxLevel() {
 		taxLevel = append(taxLevel, TaxLevel{Level: v.Level, Tax: Decimal(v.Tax)})
