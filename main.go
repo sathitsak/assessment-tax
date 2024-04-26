@@ -37,7 +37,7 @@ func main() {
 	e := echo.New()
 
 	h := handler.CreateHandler(db)
-	e.POST("/tax/calculations", h.CalTaxHandler)
+	e.POST("/tax/calculations", middleware.ValidateRequestMiddleware(h.CalTaxHandler))
 	e.POST("/tax/calculations/upload-csv", h.HandleFileUpload)
 	g := e.Group("/admin")
 	g.Use(middleware.ValidateBasicAuth(adminID, adminPassword))
