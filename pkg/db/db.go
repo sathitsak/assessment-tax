@@ -27,7 +27,14 @@ func New(dbURL string)(*sql.DB,error){
 		id serial PRIMARY KEY,
 		amount double precision NOT NULL,
 		created_at TIMESTAMP DEFAULT NOW()
-	);`
+	);
+	CREATE TABLE IF NOT EXISTS  k_receipt (
+		id serial PRIMARY KEY,
+		amount double precision NOT NULL,
+		created_at TIMESTAMP DEFAULT NOW()
+	);
+	
+	`
 	
     if _, err := db.Exec(query); err != nil{
 			log.Fatalf("Error creating table: %s", err)

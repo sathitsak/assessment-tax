@@ -25,7 +25,13 @@ func SetupTestDB(t *testing.T) (*sql.DB, func()) {
 
 func setupTestTable(db *sql.DB) {
 	// Create tables as required for your tests
-	_, err := db.Exec(`CREATE TABLE IF NOT EXISTS  personal_allowance (
+	_, err := db.Exec(`
+	CREATE TABLE IF NOT EXISTS  personal_allowance (
+		id serial PRIMARY KEY,
+		amount double precision NOT NULL,
+		created_at TIMESTAMP DEFAULT NOW()
+	);
+	CREATE TABLE IF NOT EXISTS  k_receipt (
 		id serial PRIMARY KEY,
 		amount double precision NOT NULL,
 		created_at TIMESTAMP DEFAULT NOW()

@@ -24,6 +24,7 @@ type Request struct {
 
 type handler struct{
 	personalAllowance models.PersonalAllowanceInterface
+	kReceipt models.KReceiptInterface
 }
 
 func (req *Request) Donation() float64 {
@@ -60,6 +61,7 @@ type TaxLevel struct {
 func CreateHandler(db *sql.DB)handler{
 	return handler{
 		personalAllowance: &models.PersonalAllowanceModel{DB: db},
+		kReceipt: &models.KReceiptModel{DB:db},
 	}
 }
 func (d Decimal) MarshalJSON() ([]byte, error) {
@@ -72,15 +74,7 @@ func (h *handler)CalTaxHandler(c echo.Context) error {
 	if err != nil {
 		return c.String(http.StatusBadRequest, "bad request bind error")
 	}
-	// if req.TotalIncome  == nil || req.Allowances == nil || req.Wht == nil {
-    //     return c.String(http.StatusBadRequest, "Bad Request: Missing required parameter")
-    // }
 	
-	// for _,a := range *req.Allowances {
-	// 	if a.AllowanceType != "donation" && a.AllowanceType != "k-receipt"{
-	// 		return c.String(http.StatusBadRequest, "Bad Request: Allowances contain unknow type")
-	// 	}
-	// }
 	pa,err := h.personalAllowance.Read()
 	if err != nil {
 		return c.String(http.StatusInternalServerError, "Internal server error please contact admin or try again later")

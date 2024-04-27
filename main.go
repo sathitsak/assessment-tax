@@ -42,6 +42,8 @@ func main() {
 	g := e.Group("/admin")
 	g.Use(middleware.ValidateBasicAuth(adminID, adminPassword))
 	g.POST("/deductions/personal", h.PersonalAllowanceHandler)
+	g.POST("/deductions/k-receipt", h.KReceiptHandler)
+
 
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
 
