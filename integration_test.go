@@ -1,6 +1,8 @@
+//go:build integration
 // +build integration
 
 package main
+
 import (
 	"bytes"
 	"encoding/base64"

@@ -8,7 +8,7 @@ import (
 	"strconv"
 
 	"github.com/labstack/echo/v4"
-	"github.com/sathitsak/assessment-tax/pkg/tax"
+	"github.com/sathitsak/assessment-tax/internal/tax"
 )
 
 type IncomeData struct {

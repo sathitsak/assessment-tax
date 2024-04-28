@@ -2,8 +2,10 @@ package db
 
 import (
 	"database/sql"
-	_ "github.com/lib/pq"
+	"fmt"
 	"log"
+
+	_ "github.com/lib/pq"
 )
 
 func New(dbURL string) (*sql.DB, error) {
@@ -11,12 +13,14 @@ func New(dbURL string) (*sql.DB, error) {
 	db, err := sql.Open("postgres", dbURL)
 
 	if err != nil {
+		fmt.Println("dead")
 		log.Fatal(err)
 		return nil, err
 	}
 	// Check the connection
 	err = db.Ping()
 	if err != nil {
+		fmt.Println("dead")
 		log.Fatal(err)
 		return nil, err
 	}

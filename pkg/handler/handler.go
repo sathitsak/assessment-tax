@@ -7,20 +7,21 @@ import (
 	"net/http"
 
 	"github.com/labstack/echo/v4"
-	"github.com/sathitsak/assessment-tax/pkg/models"
-	"github.com/sathitsak/assessment-tax/pkg/tax"
+	"github.com/sathitsak/assessment-tax/internal/models"
+	"github.com/sathitsak/assessment-tax/internal/tax"
 )
 
 var PERSONAL_ALLOWANCE = 60000.0
 
 type Allowance struct {
-	AllowanceType string  `json:"allowanceType"`
-	Amount        float64 `json:"amount"`
+    AllowanceType string  `json:"allowanceType"`
+    Amount        float64 `json:"amount"`
 }
+
 type Request struct {
-	TotalIncome *float64     `json:"totalIncome"`
-	Wht         *float64     `json:"wht"`
-	Allowances  *[]Allowance `json:"allowances"`
+    TotalIncome *float64    `json:"totalIncome"`
+    Wht         *float64    `json:"wht"`
+    Allowances  *[]Allowance `json:"allowances"`
 }
 
 type Handler struct {
@@ -28,7 +29,7 @@ type Handler struct {
 	kReceipt          models.KReceiptInterface
 }
 
-func (req *Request) Donation() float64 {
+func Donation(req *Request) float64 {
 	donation := 0.0
 	for _, v := range *req.Allowances {
 		if v.AllowanceType == "donation" {
@@ -38,7 +39,7 @@ func (req *Request) Donation() float64 {
 	return donation
 }
 
-func (req *Request) KReceipt() float64 {
+func KReceipt(req *Request) float64 {
 	kReceipt := 0.0
 	for _, v := range *req.Allowances {
 		if v.AllowanceType == "k-receipt" {
@@ -71,17 +72,35 @@ func (d Decimal) MarshalJSON() ([]byte, error) {
 	return []byte(fmt.Sprintf("%.1f", d)), nil
 }
 func (h *Handler) CalTaxHandler(c echo.Context) error {
-	var req Request
-	err := c.Bind(&req)
-	if err != nil {
-		return c.String(http.StatusBadRequest, "bad request bind error")
+	req := new(Request)
+
+	if err := c.Bind(&req); err != nil {
+		return c.JSON(http.StatusBadRequest, echo.Map{"error": "Invalid request body"})
+	}
+
+	// Check if totalIncome and wht are provided
+	if req.TotalIncome == nil {
+		return c.JSON(http.StatusBadRequest, echo.Map{"error": "totalIncome is required"})
+	}
+	if req.Wht == nil {
+		return c.JSON(http.StatusBadRequest, echo.Map{"error": "wht is required"})
+	}
+
+	// Check if allowances is provided and valid
+	if req.Allowances == nil {
+		return c.JSON(http.StatusBadRequest, echo.Map{"error": "allowances are required"})
+	}
+	for _, allowance := range *req.Allowances {
+		if allowance.AllowanceType != "k-receipt" && allowance.AllowanceType != "donation" {
+			return c.JSON(http.StatusBadRequest, echo.Map{"error": "unknown allowanceType"})
+		}
 	}
 
 	pa, err := h.personalAllowance.Read()
 	if err != nil {
 		return c.String(http.StatusInternalServerError, "Internal server error please contact admin or try again later")
 	}
-	tax := tax.CreateTax(*req.TotalIncome, *req.Wht, pa, req.Donation(), req.KReceipt())
+	tax := tax.CreateTax(*req.TotalIncome, *req.Wht, pa, Donation(req), KReceipt(req))
 	taxLevel := []TaxLevel{}
 	for _, v := range tax.TaxLevel() {
 		taxLevel = append(taxLevel, TaxLevel{Level: v.Level, Tax: Decimal(v.Tax)})
