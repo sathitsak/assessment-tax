@@ -12,9 +12,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-type testCase struct {
-	amount string
-}
 
 func TestSetInvalidKReceipt(t *testing.T) {
 	tests := []string{

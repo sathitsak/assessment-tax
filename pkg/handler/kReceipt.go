@@ -10,7 +10,7 @@ type KReceiptRequest struct {
 	Amount float64 `json:"amount" form:"amount"`
 }
 type KReceiptResponse struct {
-	KReceipt float64 `json:"kReceipt" form:"kReceipt"`
+	KReceipt Decimal `json:"kReceipt" form:"kReceipt"`
 }
 
 var minAmount = 0.0
@@ -31,7 +31,7 @@ func (h *Handler) KReceiptHandler(c echo.Context) error {
 	if err != nil {
 		return c.String(http.StatusInternalServerError, "Internal server error please contact admin or try again later")
 	}
-	return c.JSON(http.StatusOK, KReceiptResponse{k.Amount})
+	return c.JSON(http.StatusOK, KReceiptResponse{Decimal(k.Amount)})
 }
 
 func (h *Handler) KReciptValue(c echo.Context) (float64, error) {

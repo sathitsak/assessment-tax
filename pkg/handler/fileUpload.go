@@ -19,9 +19,9 @@ type IncomeData struct {
 }
 
 type Tax struct {
-	TotalIncome float64 `json:"totalIncome" form:"totalIncome"`
-	Tax         float64 `json:"tax" form:"tax"`
-	TaxRefund   float64 `json:"taxRefund" form:"taxRefund"`
+	TotalIncome Decimal `json:"totalIncome" form:"totalIncome"`
+	Tax         Decimal `json:"tax" form:"tax"`
+	TaxRefund   Decimal `json:"taxRefund" form:"taxRefund"`
 }
 
 type FileUploadResponse struct {
@@ -100,9 +100,9 @@ func (h *Handler) HandleFileUpload(c echo.Context) error {
 	for _, row := range data {
 		tax := tax.CreateTax(row.TotalIncome, row.WHT, pa, row.Donation, row.KReceipt)
 		if tax.PayAble() >= 0 {
-			res = append(res, Tax{TotalIncome: row.TotalIncome, Tax: tax.PayAble(), TaxRefund: 0})
+			res = append(res, Tax{TotalIncome: Decimal(row.TotalIncome), Tax: Decimal(tax.PayAble()), TaxRefund: 0})
 		} else {
-			res = append(res, Tax{TotalIncome: row.TotalIncome, Tax: 0, TaxRefund: tax.PayAble()})
+			res = append(res, Tax{TotalIncome: Decimal(row.TotalIncome), Tax: 0, TaxRefund: Decimal(tax.PayAble())})
 		}
 	}
 
