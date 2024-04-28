@@ -9,7 +9,7 @@ services:
       - db  # Ensures db starts first
     # entrypoint: /wait-for-it.sh db:5432 --timeout=30 -- ./main
     environment:
-      DATABASE_URL: postgresql://root:password@db:5432/tax_assessment?sslmode=disable  # Use service name 'db' as host
+      DATABASE_URL: postgresql://root:password@host.docker.internal:15432/tax_assessment?sslmode=disable  # Use service name 'db' as host
       
 
   db:

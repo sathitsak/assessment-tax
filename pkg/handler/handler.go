@@ -14,14 +14,14 @@ import (
 var PERSONAL_ALLOWANCE = 60000.0
 
 type Allowance struct {
-    AllowanceType string  `json:"allowanceType"`
-    Amount        float64 `json:"amount"`
+	AllowanceType string  `json:"allowanceType"`
+	Amount        float64 `json:"amount"`
 }
 
 type Request struct {
-    TotalIncome *float64    `json:"totalIncome"`
-    Wht         *float64    `json:"wht"`
-    Allowances  *[]Allowance `json:"allowances"`
+	TotalIncome *float64     `json:"totalIncome"`
+	Wht         *float64     `json:"wht"`
+	Allowances  *[]Allowance `json:"allowances"`
 }
 
 type Handler struct {

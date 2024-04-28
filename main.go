@@ -14,8 +14,8 @@ import (
 	// "github.com/labstack/echo/v4/middleware"
 	_ "github.com/lib/pq"
 	"github.com/sathitsak/assessment-tax/internal"
-	"github.com/sathitsak/assessment-tax/middleware"
 	"github.com/sathitsak/assessment-tax/internal/db"
+	"github.com/sathitsak/assessment-tax/middleware"
 	"github.com/sathitsak/assessment-tax/pkg/handler"
 )
 
