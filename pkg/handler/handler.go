@@ -22,7 +22,7 @@ type Request struct {
 	Allowances  *[]Allowance `json:"allowances"`
 }
 
-type handler struct{
+type Handler struct{
 	personalAllowance models.PersonalAllowanceInterface
 	kReceipt models.KReceiptInterface
 }
@@ -58,8 +58,8 @@ type TaxLevel struct {
 	Level string  `json:"level"`
 	Tax   Decimal `json:"tax"`
 }
-func CreateHandler(db *sql.DB)handler{
-	return handler{
+func CreateHandler(db *sql.DB)Handler{
+	return Handler{
 		personalAllowance: &models.PersonalAllowanceModel{DB: db},
 		kReceipt: &models.KReceiptModel{DB:db},
 	}
@@ -68,7 +68,7 @@ func (d Decimal) MarshalJSON() ([]byte, error) {
 	// Always format with one decimal place
 	return []byte(fmt.Sprintf("%.1f", d)), nil
 }
-func (h *handler)CalTaxHandler(c echo.Context) error {
+func (h *Handler)CalTaxHandler(c echo.Context) error {
 	var req Request
 	err := c.Bind(&req)
 	if err != nil {
@@ -100,7 +100,7 @@ type PersonalAllowanceResponse struct{
 	PersonalDeduction float64 `json:"personalDeduction" form:"personalDeduction"`
 }
 
-func (h *handler) PersonalAllowanceHandler (c echo.Context) error {
+func (h *Handler) PersonalAllowanceHandler (c echo.Context) error {
 	var pa PersonalAllowance
 	if err := c.Bind(&pa); err != nil{
 		return c.String(http.StatusBadRequest, "bad request")

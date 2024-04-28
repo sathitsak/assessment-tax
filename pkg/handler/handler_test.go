@@ -186,12 +186,11 @@ func TestDonation(t *testing.T) {
 	want := 19000.0
 	c := e.NewContext(req, rec)
 	var got Response
-	db,teardown:= internal.SetupTestDB(t)
-	defer teardown()
-	h:= CreateHandler(db)
+	h:= CreateTestHandler()
 
 	if assert.NoError(t, h.CalTaxHandler(c),json.Unmarshal(rec.Body.Bytes(), &got)) {
 		assert.Equal(t, want, float64(got.Tax))
 		assert.Equal(t, http.StatusOK, rec.Code)
 	}
 }
+

@@ -48,9 +48,8 @@ func TestSetKReceipt(t *testing.T){
 	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 	rec := httptest.NewRecorder()
 	c := e.NewContext(req, rec)
-	db,teardown:= internal.SetupTestDB(t)
-	defer teardown()
-	h:= CreateHandler(db)
+	
+	h:= CreateTestHandler()
 	 want := KReceiptResponse{
 		KReceipt: 70000.0,
 	 }
@@ -67,3 +66,5 @@ func TestSetKReceipt(t *testing.T){
 	
 
 }
+
+

@@ -6,16 +6,17 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-type KReceiptRequest struct{
+type KReceiptRequest struct {
 	Amount float64 `json:"amount" form:"amount"`
 }
-type KReceiptResponse struct{
+type KReceiptResponse struct {
 	KReceipt float64 `json:"kReceipt" form:"kReceipt"`
 }
 
 var minAmount = 0.0
 var maxAmount = 100000.0
-func (h *handler) KReceiptHandler(c echo.Context) error {
+
+func (h *Handler) KReceiptHandler(c echo.Context) error {
 	var k KReceiptRequest
 	if err := c.Bind(&k); err != nil {
 		return c.String(http.StatusBadRequest, "bad request")
@@ -23,7 +24,7 @@ func (h *handler) KReceiptHandler(c echo.Context) error {
 	if k.Amount < minAmount {
 		return c.String(http.StatusBadRequest, "The amount provided is below the minimum allowed limit.")
 	}
-	if  k.Amount > maxAmount{
+	if k.Amount > maxAmount {
 		return c.String(http.StatusBadRequest, "The amount provided exceeds the maximum allowed limit.")
 	}
 	err := h.kReceipt.Create(k.Amount)
