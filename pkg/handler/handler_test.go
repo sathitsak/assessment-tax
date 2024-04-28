@@ -60,17 +60,16 @@ func TestCalTaxHandler(t *testing.T) {
 
 	c := e.NewContext(req, rec)
 	var got Response
-	db,teardown:= internal.SetupTestDB(t)
+	db, teardown := internal.SetupTestDB(t)
 	defer teardown()
-	h:= CreateHandler(db)
+	h := CreateHandler(db)
 
-	if assert.NoError(t, h.CalTaxHandler(c),json.Unmarshal(rec.Body.Bytes(), &got)) {
+	if assert.NoError(t, h.CalTaxHandler(c), json.Unmarshal(rec.Body.Bytes(), &got)) {
 		assert.Equal(t, http.StatusOK, rec.Code)
 		assert.Equal(t, want, got)
 	}
 
 }
-
 
 func TestPersonalAllowanceHandler(t *testing.T) {
 	var requestJSON = `{
@@ -83,27 +82,24 @@ func TestPersonalAllowanceHandler(t *testing.T) {
 	req.Header.Set("Authorization", "Basic "+auth)
 	rec := httptest.NewRecorder()
 	c := e.NewContext(req, rec)
-	db,teardown:= internal.SetupTestDB(t)
+	db, teardown := internal.SetupTestDB(t)
 	defer teardown()
-	h:= CreateHandler(db)
-	 want := PersonalAllowanceResponse{
+	h := CreateHandler(db)
+	want := PersonalAllowanceResponse{
 		PersonalDeduction: 70000.0,
-	 }
-	 var got PersonalAllowanceResponse
-	if assert.NoError(t, h.PersonalAllowanceHandler(c),json.Unmarshal(rec.Body.Bytes(), &got)) {
-		assert.Equal(t, http.StatusOK, rec.Code)
-		assert.Equal(t,got,want)
 	}
-	amount,err := h.personalAllowance.Read()
-	if assert.NoError(t,err){
-		assert.Equal(t,70000.0,amount)
+	var got PersonalAllowanceResponse
+	if assert.NoError(t, h.PersonalAllowanceHandler(c), json.Unmarshal(rec.Body.Bytes(), &got)) {
+		assert.Equal(t, http.StatusOK, rec.Code)
+		assert.Equal(t, got, want)
+	}
+	amount, err := h.personalAllowance.Read()
+	if assert.NoError(t, err) {
+		assert.Equal(t, 70000.0, amount)
 
 	}
-	
 
 }
-
-
 
 func TestPerosnalAllowanceBadRequest(t *testing.T) {
 	var requestJSON = `{}`
@@ -114,13 +110,13 @@ func TestPerosnalAllowanceBadRequest(t *testing.T) {
 	req.Header.Set("Authorization", "Basic "+auth)
 	rec := httptest.NewRecorder()
 	c := e.NewContext(req, rec)
-	db,teardown:= internal.SetupTestDB(t)
+	db, teardown := internal.SetupTestDB(t)
 	defer teardown()
-	h:= CreateHandler(db)
+	h := CreateHandler(db)
 	if assert.NoError(t, h.PersonalAllowanceHandler(c)) {
 		assert.Equal(t, http.StatusBadRequest, rec.Code)
 	}
-	
+
 }
 func TestBadRequest(t *testing.T) {
 
@@ -158,11 +154,11 @@ func TestTaxRefund(t *testing.T) {
 
 	c := e.NewContext(req, rec)
 	var got Response
-	db,teardown:= internal.SetupTestDB(t)
+	db, teardown := internal.SetupTestDB(t)
 	defer teardown()
-	h:= CreateHandler(db)
+	h := CreateHandler(db)
 
-	if assert.NoError(t, h.CalTaxHandler(c),json.Unmarshal(rec.Body.Bytes(), &got)) {
+	if assert.NoError(t, h.CalTaxHandler(c), json.Unmarshal(rec.Body.Bytes(), &got)) {
 		assert.Equal(t, http.StatusOK, rec.Code)
 		assert.Equal(t, want, float64(got.TaxRefund))
 	}
@@ -186,11 +182,10 @@ func TestDonation(t *testing.T) {
 	want := 19000.0
 	c := e.NewContext(req, rec)
 	var got Response
-	h:= CreateTestHandler()
+	h := CreateTestHandler()
 
-	if assert.NoError(t, h.CalTaxHandler(c),json.Unmarshal(rec.Body.Bytes(), &got)) {
+	if assert.NoError(t, h.CalTaxHandler(c), json.Unmarshal(rec.Body.Bytes(), &got)) {
 		assert.Equal(t, want, float64(got.Tax))
 		assert.Equal(t, http.StatusOK, rec.Code)
 	}
 }
-

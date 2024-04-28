@@ -11,7 +11,7 @@ import (
 )
 
 func SetupTestDB(t *testing.T) (*sql.DB, func()) {
-	
+
 	db, err := createTestDB()
 	assert.Equal(t, err, nil)
 
@@ -61,7 +61,5 @@ func createTestDB() (*sql.DB, error) {
 		return nil, err
 	}
 	return db, nil
-	
+
 }
-
-

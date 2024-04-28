@@ -1,15 +1,10 @@
 package mock
 
-
-
 // MockDB is a mock implementation of PersonalAllowanceInterface
 type MockDB struct {
-	Amounts []float64 // Slice to simulate database records
+	Amounts       []float64 // Slice to simulate database records
 	DefaultAmount float64
 }
-
-
-
 
 // Create simulates creating a personal allowance record
 func (m *MockDB) Create(amount float64) error {
@@ -24,4 +19,3 @@ func (m *MockDB) Read() (float64, error) {
 	}
 	return m.Amounts[len(m.Amounts)-1], nil // Return the last element as the latest record
 }
-

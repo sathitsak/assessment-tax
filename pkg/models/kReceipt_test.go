@@ -20,8 +20,3 @@ func TestSetKReceipt(t *testing.T) {
 	}
 	teardown()
 }
-
-
-
-
-

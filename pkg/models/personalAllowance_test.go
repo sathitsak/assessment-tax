@@ -5,7 +5,6 @@ import (
 
 	_ "github.com/lib/pq"
 	"github.com/sathitsak/assessment-tax/internal"
-
 	"github.com/stretchr/testify/assert"
 )
 
@@ -21,4 +20,3 @@ func TestSetPersonalAllowance(t *testing.T) {
 	}
 	teardown()
 }
-

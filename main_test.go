@@ -33,11 +33,12 @@ func TestAdminWrongCredential(t *testing.T) {
 	e.ServeHTTP(rec, req)
 	assert.Equal(t, http.StatusUnauthorized, rec.Code)
 }
+
 type IncomeData struct {
 	TotalIncome float64 `json:"totalIncome"`
 	WHT         float64 `json:"wht"`
 	Donation    float64 `json:"donation"`
-	KReceipt float64 `json:"k-receipt"`
+	KReceipt    float64 `json:"k-receipt"`
 }
 
 type Tax struct {
@@ -60,6 +61,7 @@ type Response struct {
 	TaxRefund Decimal    `json:"taxRefund" form:"taxRefund"`
 	TaxLevel  []TaxLevel `json:"taxLevel"`
 }
+
 func TestCalTaxHandler(t *testing.T) {
 	var requestJSON = `{
 		"totalIncome": 500000.0,
@@ -107,11 +109,11 @@ func TestCalTaxHandler(t *testing.T) {
 
 	c := e.NewContext(req, rec)
 	var got Response
-	db,teardown:= internal.SetupTestDB(t)
+	db, teardown := internal.SetupTestDB(t)
 	defer teardown()
-	h:= handler.CreateHandler(db)
+	h := handler.CreateHandler(db)
 
-	if assert.NoError(t, h.CalTaxHandler(c),json.Unmarshal(rec.Body.Bytes(), &got)) {
+	if assert.NoError(t, h.CalTaxHandler(c), json.Unmarshal(rec.Body.Bytes(), &got)) {
 		assert.Equal(t, http.StatusOK, rec.Code)
 		assert.Equal(t, want, got)
 	}
@@ -119,22 +121,22 @@ func TestCalTaxHandler(t *testing.T) {
 }
 
 type FileUploadTestCase struct {
-	csvContent string
-	want       FileUploadResponse
-	wantStatusCode   int
+	csvContent     string
+	want           FileUploadResponse
+	wantStatusCode int
 }
 
 func TestFileUpload(t *testing.T) {
 	e := echo.New()
 	tests := []FileUploadTestCase{
-		{csvContent: "totalIncome,wht,donation\n500000,0,0\n600000,40000,20000\n750000,50000,15000", 
+		{csvContent: "totalIncome,wht,donation\n500000,0,0\n600000,40000,20000\n750000,50000,15000",
 			want: FileUploadResponse{
-			Taxes: []Tax{
-				{TotalIncome: 500000, Tax: 29000, TaxRefund: 0.0},
-				{TotalIncome: 600000, Tax: 0, TaxRefund: -2000.0},
-				{TotalIncome: 750000, Tax: 11250, TaxRefund: 0},
+				Taxes: []Tax{
+					{TotalIncome: 500000, Tax: 29000, TaxRefund: 0.0},
+					{TotalIncome: 600000, Tax: 0, TaxRefund: -2000.0},
+					{TotalIncome: 750000, Tax: 11250, TaxRefund: 0},
+				},
 			},
-		},
 			wantStatusCode: http.StatusOK},
 		{csvContent: "totalIncome,wht,donation,k-receipt\n500000,0,0,0\n500000,0,100000.0,200000.0",
 			want: FileUploadResponse{Taxes: []Tax{
@@ -144,53 +146,51 @@ func TestFileUpload(t *testing.T) {
 			}}, wantStatusCode: http.StatusOK,
 		},
 	}
-	for _,test := range tests{
+	for _, test := range tests {
 
-	
-	// Create a buffer to write our multipart form data
-	body := new(bytes.Buffer)
-	writer := multipart.NewWriter(body)
+		// Create a buffer to write our multipart form data
+		body := new(bytes.Buffer)
+		writer := multipart.NewWriter(body)
 
-	// Simulate a file with CSV content
-	part, err := writer.CreateFormFile("taxFile", "test.csv")
-	if err != nil {
-		t.Fatal(err)
+		// Simulate a file with CSV content
+		part, err := writer.CreateFormFile("taxFile", "test.csv")
+		if err != nil {
+			t.Fatal(err)
+		}
+		if _, err := part.Write([]byte(test.csvContent)); err != nil {
+			t.Fatal(err)
+		}
+		writer.Close()
+
+		// Create a request to your endpoint
+		req := httptest.NewRequest(http.MethodPost, "/tax/calculations/upload-csv", body)
+		req.Header.Set("Content-Type", writer.FormDataContentType())
+
+		// Record the response
+		rec := httptest.NewRecorder()
+		db, teardown := internal.SetupTestDB(t)
+		defer teardown()
+		h := handler.CreateHandler(db)
+		c := e.NewContext(req, rec)
+		var got FileUploadResponse
+
+		if assert.NoError(t, h.HandleFileUpload(c), json.Unmarshal(rec.Body.Bytes(), &got)) {
+			assert.Equal(t, test.wantStatusCode, rec.Code)
+			assert.Equal(t, test.want, got)
+		}
 	}
-	if _, err := part.Write([]byte(test.csvContent)); err != nil {
-		t.Fatal(err)
-	}
-	writer.Close()
-
-	
-	// Create a request to your endpoint
-	req := httptest.NewRequest(http.MethodPost, "/tax/calculations/upload-csv", body)
-	req.Header.Set("Content-Type", writer.FormDataContentType())
-
-	// Record the response
-	rec := httptest.NewRecorder()
-	db, teardown := internal.SetupTestDB(t)
-	defer teardown()
-	h := handler.CreateHandler(db)
-	c := e.NewContext(req, rec)
-	var got FileUploadResponse
-
-	if assert.NoError(t, h.HandleFileUpload(c), json.Unmarshal(rec.Body.Bytes(), &got)) {
-		assert.Equal(t, test.wantStatusCode, rec.Code)
-		assert.Equal(t, test.want, got)
-	}
-}
 }
 func TestFileUploadInvalidFile(t *testing.T) {
 	e := echo.New()
 	tests := []FileUploadTestCase{
-		{csvContent: "totalIncome,wht,donation\n500000,,0\n600000,,20000\n750000,50000,15000", 
+		{csvContent: "totalIncome,wht,donation\n500000,,0\n600000,,20000\n750000,50000,15000",
 			want: FileUploadResponse{
-			Taxes: []Tax{
-				{TotalIncome: 500000, Tax: 29000, TaxRefund: 0.0},
-				{TotalIncome: 600000, Tax: 0, TaxRefund: -2000.0},
-				{TotalIncome: 750000, Tax: 11250, TaxRefund: 0},
+				Taxes: []Tax{
+					{TotalIncome: 500000, Tax: 29000, TaxRefund: 0.0},
+					{TotalIncome: 600000, Tax: 0, TaxRefund: -2000.0},
+					{TotalIncome: 750000, Tax: 11250, TaxRefund: 0},
+				},
 			},
-		},
 			wantStatusCode: http.StatusOK},
 		{csvContent: "totalIncome,wht,,k-receipt\n500000,0,0,0\n500000,0,100000.0,200000.0",
 			want: FileUploadResponse{Taxes: []Tax{
@@ -198,43 +198,40 @@ func TestFileUploadInvalidFile(t *testing.T) {
 				{TotalIncome: 500000, Tax: 14000, TaxRefund: 0},
 				// {TotalIncome: 750000, Tax: 0, TaxRefund: 38750.0},
 			}}, wantStatusCode: http.StatusOK,
-		},{csvContent: "totalIncome,wht,donation,k-receipt\n500000,0,0\n600000,,50000\n750000,50000,100000",
-		want: FileUploadResponse{}, wantStatusCode: http.StatusBadRequest,
-	},
+		}, {csvContent: "totalIncome,wht,donation,k-receipt\n500000,0,0\n600000,,50000\n750000,50000,100000",
+			want: FileUploadResponse{}, wantStatusCode: http.StatusBadRequest,
+		},
 	}
-	for _,test := range tests{
+	for _, test := range tests {
 
-	
-	// Create a buffer to write our multipart form data
-	body := new(bytes.Buffer)
-	writer := multipart.NewWriter(body)
+		// Create a buffer to write our multipart form data
+		body := new(bytes.Buffer)
+		writer := multipart.NewWriter(body)
 
-	// Simulate a file with CSV content
-	part, err := writer.CreateFormFile("taxFile", "test.csv")
-	if err != nil {
-		t.Fatal(err)
+		// Simulate a file with CSV content
+		part, err := writer.CreateFormFile("taxFile", "test.csv")
+		if err != nil {
+			t.Fatal(err)
+		}
+		if _, err := part.Write([]byte(test.csvContent)); err != nil {
+			t.Fatal(err)
+		}
+		writer.Close()
+
+		// Create a request to your endpoint
+		req := httptest.NewRequest(http.MethodPost, "/tax/calculations/upload-csv", body)
+		req.Header.Set("Content-Type", writer.FormDataContentType())
+
+		// Record the response
+		rec := httptest.NewRecorder()
+		db, teardown := internal.SetupTestDB(t)
+		defer teardown()
+		h := handler.CreateHandler(db)
+		c := e.NewContext(req, rec)
+		h.HandleFileUpload(c)
+		if assert.NoError(t, h.HandleFileUpload(c)) {
+			assert.Equal(t, http.StatusBadRequest, rec.Code)
+		}
+
 	}
-	if _, err := part.Write([]byte(test.csvContent)); err != nil {
-		t.Fatal(err)
-	}
-	writer.Close()
-
-	
-	// Create a request to your endpoint
-	req := httptest.NewRequest(http.MethodPost, "/tax/calculations/upload-csv", body)
-	req.Header.Set("Content-Type", writer.FormDataContentType())
-
-	// Record the response
-	rec := httptest.NewRecorder()
-	db, teardown := internal.SetupTestDB(t)
-	defer teardown()
-	h := handler.CreateHandler(db)
-	c := e.NewContext(req, rec)
-	h.HandleFileUpload(c)
-	if assert.NoError(t, h.HandleFileUpload(c)) {
-		assert.Equal(t, http.StatusBadRequest, rec.Code)
-	}
-	
-	
-}
 }

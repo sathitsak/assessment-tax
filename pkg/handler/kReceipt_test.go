@@ -39,7 +39,7 @@ func TestSetInvalidKReceipt(t *testing.T) {
 
 }
 
-func TestSetKReceipt(t *testing.T){
+func TestSetKReceipt(t *testing.T) {
 	var requestJSON = `{
 		"amount": 70000.0
 	  }`
@@ -48,23 +48,20 @@ func TestSetKReceipt(t *testing.T){
 	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 	rec := httptest.NewRecorder()
 	c := e.NewContext(req, rec)
-	
-	h:= CreateTestHandler()
-	 want := KReceiptResponse{
+
+	h := CreateTestHandler()
+	want := KReceiptResponse{
 		KReceipt: 70000.0,
-	 }
-	 var got KReceiptResponse
-	if assert.NoError(t, h.KReceiptHandler(c),json.Unmarshal(rec.Body.Bytes(), &got)) {
-		assert.Equal(t, http.StatusOK, rec.Code)
-		assert.Equal(t,got,want)
 	}
-	amount,err := h.kReceipt.Read()
-	if assert.NoError(t,err){
-		assert.Equal(t,70000.0,amount)
+	var got KReceiptResponse
+	if assert.NoError(t, h.KReceiptHandler(c), json.Unmarshal(rec.Body.Bytes(), &got)) {
+		assert.Equal(t, http.StatusOK, rec.Code)
+		assert.Equal(t, got, want)
+	}
+	amount, err := h.kReceipt.Read()
+	if assert.NoError(t, err) {
+		assert.Equal(t, 70000.0, amount)
 
 	}
-	
 
 }
-
-

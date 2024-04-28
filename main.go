@@ -44,7 +44,6 @@ func main() {
 	g.POST("/deductions/personal", h.PersonalAllowanceHandler)
 	g.POST("/deductions/k-receipt", h.KReceiptHandler)
 
-
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
 
 	defer stop()
@@ -63,6 +62,3 @@ func main() {
 		e.Logger.Fatal(err)
 	}
 }
-
-
-
