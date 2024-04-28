@@ -93,29 +93,3 @@ func (h *Handler) CalTaxHandler(c echo.Context) error {
 	}
 
 }
-
-type PersonalAllowance struct {
-	Amount float64 `json:"amount" form:"amount"`
-}
-type PersonalAllowanceResponse struct {
-	PersonalDeduction float64 `json:"personalDeduction" form:"personalDeduction"`
-}
-
-func (h *Handler) PersonalAllowanceHandler(c echo.Context) error {
-	var pa PersonalAllowance
-	if err := c.Bind(&pa); err != nil {
-		return c.String(http.StatusBadRequest, "bad request")
-	}
-	fmt.Println(pa.Amount)
-	if pa.Amount > 100000.0 {
-		return c.String(http.StatusBadRequest, "The amount provided exceeds the maximum allowed limit.")
-	}
-	if pa.Amount < 10000.0 {
-		return c.String(http.StatusBadRequest, "The amount provided is below the minimum allowed limit.")
-	}
-	err := h.personalAllowance.Create(pa.Amount)
-	if err != nil {
-		return c.String(http.StatusInternalServerError, "Internal server error please contact admin or try again later")
-	}
-	return c.JSON(http.StatusOK, PersonalAllowanceResponse{pa.Amount})
-}

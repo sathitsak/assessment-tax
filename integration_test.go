@@ -1,5 +1,6 @@
-package main
+// +build integration
 
+package main
 import (
 	"bytes"
 	"encoding/base64"
@@ -16,23 +17,6 @@ import (
 	"github.com/sathitsak/assessment-tax/pkg/handler"
 	"github.com/stretchr/testify/assert"
 )
-
-func TestAdminWrongCredential(t *testing.T) {
-	var requestJSON = `{}`
-	req := httptest.NewRequest(http.MethodPost, "/admin/deductions/personal", strings.NewReader(requestJSON))
-	auth := base64.StdEncoding.EncodeToString([]byte("adminTaxx:adminn!"))
-	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
-	req.Header.Set("Authorization", "Basic "+auth)
-	rec := httptest.NewRecorder()
-	db, teardown := internal.SetupTestDB(t)
-	defer teardown()
-	h := handler.CreateHandler(db)
-	e := echo.New()
-	e.Use(middleware.ValidateBasicAuth("adminTax", "admin!"))
-	e.POST("/admin/deductions/personal", h.PersonalAllowanceHandler)
-	e.ServeHTTP(rec, req)
-	assert.Equal(t, http.StatusUnauthorized, rec.Code)
-}
 
 type IncomeData struct {
 	TotalIncome float64 `json:"totalIncome"`
@@ -60,6 +44,37 @@ type Response struct {
 	Tax       Decimal    `json:"tax" form:"tax"`
 	TaxRefund Decimal    `json:"taxRefund" form:"taxRefund"`
 	TaxLevel  []TaxLevel `json:"taxLevel"`
+}
+
+type FileUploadTestCase struct {
+	csvContent     string
+	want           FileUploadResponse
+	wantStatusCode int
+}
+
+type PersonalAllowanceResponse struct {
+	PersonalDeduction float64 `json:"personalDeduction" form:"personalDeduction"`
+}
+
+type KReceiptResponse struct {
+	KReceipt float64 `json:"kReceipt" form:"kReceipt"`
+}
+
+func TestAdminWrongCredential(t *testing.T) {
+	var requestJSON = `{}`
+	req := httptest.NewRequest(http.MethodPost, "/admin/deductions/personal", strings.NewReader(requestJSON))
+	auth := base64.StdEncoding.EncodeToString([]byte("adminTaxx:adminn!"))
+	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+	req.Header.Set("Authorization", "Basic "+auth)
+	rec := httptest.NewRecorder()
+	db, teardown := internal.SetupTestDB(t)
+	defer teardown()
+	h := handler.CreateHandler(db)
+	e := echo.New()
+	e.Use(middleware.ValidateBasicAuth("adminTax", "admin!"))
+	e.POST("/admin/deductions/personal", h.PersonalAllowanceHandler)
+	e.ServeHTTP(rec, req)
+	assert.Equal(t, http.StatusUnauthorized, rec.Code)
 }
 
 func TestCalTaxHandler(t *testing.T) {
@@ -118,12 +133,6 @@ func TestCalTaxHandler(t *testing.T) {
 		assert.Equal(t, want, got)
 	}
 
-}
-
-type FileUploadTestCase struct {
-	csvContent     string
-	want           FileUploadResponse
-	wantStatusCode int
 }
 
 func TestFileUpload(t *testing.T) {
@@ -234,4 +243,82 @@ func TestFileUploadInvalidFile(t *testing.T) {
 		}
 
 	}
+}
+
+func TestPersonalAllowanceHandler(t *testing.T) {
+	var requestJSON = `{
+		"amount": 70000.0
+	  }`
+	e := echo.New()
+	req := httptest.NewRequest(http.MethodPost, "/admin/deductions/personal", strings.NewReader(requestJSON))
+	auth := base64.StdEncoding.EncodeToString([]byte("adminTax:admin!"))
+	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+	req.Header.Set("Authorization", "Basic "+auth)
+	rec := httptest.NewRecorder()
+	c := e.NewContext(req, rec)
+	db, teardown := internal.SetupTestDB(t)
+	defer teardown()
+	h := handler.CreateHandler(db)
+	want := PersonalAllowanceResponse{
+		PersonalDeduction: 70000.0,
+	}
+	var got PersonalAllowanceResponse
+	if assert.NoError(t, h.PersonalAllowanceHandler(c), json.Unmarshal(rec.Body.Bytes(), &got)) {
+		assert.Equal(t, http.StatusOK, rec.Code)
+		assert.Equal(t, got, want)
+	}
+
+}
+
+func TestTaxRefund(t *testing.T) {
+	var requestJSON = `{
+		"totalIncome": 500000.0,
+		"wht": 39000.0,
+		"allowances": [
+		  {
+			"allowanceType": "donation",
+			"amount": 0.0
+		  }
+		]
+	  }`
+	e := echo.New()
+	req := httptest.NewRequest(http.MethodPost, "/tax/calculations", strings.NewReader(requestJSON))
+	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+	rec := httptest.NewRecorder()
+	want := 10000.0
+
+	c := e.NewContext(req, rec)
+	var got Response
+	db, teardown := internal.SetupTestDB(t)
+	defer teardown()
+	h := handler.CreateHandler(db)
+
+	if assert.NoError(t, h.CalTaxHandler(c), json.Unmarshal(rec.Body.Bytes(), &got)) {
+		assert.Equal(t, http.StatusOK, rec.Code)
+		assert.Equal(t, want, float64(got.TaxRefund))
+	}
+}
+
+func TestSetKReceipt(t *testing.T) {
+	var requestJSON = `{
+		"amount": 70000.0
+	  }`
+	e := echo.New()
+	req := httptest.NewRequest(http.MethodPost, "/test", strings.NewReader(requestJSON))
+	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+	rec := httptest.NewRecorder()
+	c := e.NewContext(req, rec)
+
+	db, teardown := internal.SetupTestDB(t)
+	defer teardown()
+	h := handler.CreateHandler(db)
+	want := KReceiptResponse{
+		KReceipt: 70000.0,
+	}
+	var got KReceiptResponse
+	if assert.NoError(t, h.KReceiptHandler(c), json.Unmarshal(rec.Body.Bytes(), &got)) {
+		assert.Equal(t, http.StatusOK, rec.Code)
+		assert.Equal(t, got, want)
+	}
+
 }

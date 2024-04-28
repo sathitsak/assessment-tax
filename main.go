@@ -9,11 +9,11 @@ import (
 	"os/signal"
 	"time"
 
-	"github.com/joho/godotenv"
 	"github.com/labstack/echo/v4"
 
 	// "github.com/labstack/echo/v4/middleware"
 	_ "github.com/lib/pq"
+	"github.com/sathitsak/assessment-tax/internal"
 	"github.com/sathitsak/assessment-tax/middleware"
 	"github.com/sathitsak/assessment-tax/pkg/db"
 	"github.com/sathitsak/assessment-tax/pkg/handler"
@@ -22,14 +22,14 @@ import (
 var PERSONAL_ALLOWANCE = 60000.0
 
 func main() {
-	err := godotenv.Load()
-	if err != nil {
-		log.Fatal("Error loading .env file")
-	}
-	port := os.Getenv("PORT")
-	dbURL := os.Getenv("DATABASE_URL")
-	adminID := os.Getenv("ADMIN_USERNAME")
-	adminPassword := os.Getenv("ADMIN_PASSWORD")
+	// err := godotenv.Load()
+	// if err != nil {
+	// 	log.Fatal("Error loading .env file")
+	// }
+	port :=internal.GetEnvWithFallback("PORT","8080")
+	dbURL := internal.GetEnvWithFallback("DATABASE_URL","postgres://root:password@localhost:15432/tax_assessment?sslmode=disable")
+	adminID := internal.GetEnvWithFallback("ADMIN_USERNAME","adminTax")
+	adminPassword := internal.GetEnvWithFallback("ADMIN_PASSWORD","admin!")
 	db, err := db.New(dbURL)
 	if err != nil {
 		log.Fatal("can't connect to db")
@@ -62,3 +62,5 @@ func main() {
 		e.Logger.Fatal(err)
 	}
 }
+
+

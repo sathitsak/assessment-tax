@@ -48,6 +48,7 @@ func dropTestTable(db *sql.DB) {
 	}
 }
 func createTestDB() (*sql.DB, error) {
+
 	db, err := sql.Open("postgres", "postgres://root:password@localhost:15432/test_db?sslmode=disable")
 
 	if err != nil {

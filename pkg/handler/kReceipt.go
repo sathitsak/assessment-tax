@@ -33,3 +33,11 @@ func (h *Handler) KReceiptHandler(c echo.Context) error {
 	}
 	return c.JSON(http.StatusOK, KReceiptResponse{k.Amount})
 }
+
+func (h *Handler) KReciptValue(c echo.Context) (float64, error) {
+	v, err := h.kReceipt.Read()
+	if err != nil {
+		return 0, c.String(http.StatusInternalServerError, "can't connect to database")
+	}
+	return v, nil
+}

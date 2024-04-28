@@ -1,5 +1,6 @@
 FROM golang:1.22-alpine as build-base
 
+
 WORKDIR /app
 
 COPY go.mod .
