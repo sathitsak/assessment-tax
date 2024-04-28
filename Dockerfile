@@ -1,21 +1,22 @@
-FROM golang:1.22-alpine as build-base
+FROM golang:1.22-alpine as builder
 
 WORKDIR /app
 
-COPY go.mod .
+COPY go.mod go.sum ./
 
 RUN go mod download
 
 COPY . .
 
-RUN CGO_ENABLED=0 go test -v
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -a -o main .
 
-RUN go build -o ./out/assessment-tax .
-
-# ====================
+FROM alpine:latest  
 
 
-FROM alpine:3.19
-COPY --from=build-base /app/out/assessment-tax /app/assessment-tax
+WORKDIR /root/
+
+COPY --from=builder /app/main .
+
 EXPOSE 8080
-CMD ["/app/assessment-tax"]
+
+CMD ["./main"]

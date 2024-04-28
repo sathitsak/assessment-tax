@@ -11,7 +11,7 @@ import (
 )
 
 func SetupTestDB(t *testing.T) (*sql.DB, func()) {
-	
+
 	db, err := createTestDB()
 	assert.Equal(t, err, nil)
 
@@ -25,7 +25,13 @@ func SetupTestDB(t *testing.T) (*sql.DB, func()) {
 
 func setupTestTable(db *sql.DB) {
 	// Create tables as required for your tests
-	_, err := db.Exec(`CREATE TABLE IF NOT EXISTS  personal_allowance (
+	_, err := db.Exec(`
+	CREATE TABLE IF NOT EXISTS  personal_allowance (
+		id serial PRIMARY KEY,
+		amount double precision NOT NULL,
+		created_at TIMESTAMP DEFAULT NOW()
+	);
+	CREATE TABLE IF NOT EXISTS  k_receipt (
 		id serial PRIMARY KEY,
 		amount double precision NOT NULL,
 		created_at TIMESTAMP DEFAULT NOW()
@@ -42,6 +48,7 @@ func dropTestTable(db *sql.DB) {
 	}
 }
 func createTestDB() (*sql.DB, error) {
+
 	db, err := sql.Open("postgres", "postgres://root:password@localhost:15432/test_db?sslmode=disable")
 
 	if err != nil {

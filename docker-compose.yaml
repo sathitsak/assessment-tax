@@ -4,9 +4,9 @@ services:
   postgres:
     image: postgres:latest
     environment:
-      POSTGRES_USER: admin
-      POSTGRES_PASSWORD: adminpassword
-      POSTGRES_DB: defaultdb
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: tax_assessment
     volumes:
       - ./init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
     ports:
