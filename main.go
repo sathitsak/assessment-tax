@@ -26,7 +26,6 @@ func main() {
 	dbURL := internal.GetEnvWithFallback("DATABASE_URL", "postgres://root:password@localhost:15432/tax_assessment?sslmode=disable")
 	adminID := internal.GetEnvWithFallback("ADMIN_USERNAME", "adminTax")
 	adminPassword := internal.GetEnvWithFallback("ADMIN_PASSWORD", "admin!")
-	fmt.Println(dbURL)
 	db, err := db.New(dbURL)
 	if err != nil {
 		log.Fatal("can't connect to db")
