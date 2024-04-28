@@ -8,7 +8,6 @@ import (
 	"testing"
 
 	"github.com/labstack/echo/v4"
-	"github.com/sathitsak/assessment-tax/internal"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -25,9 +24,7 @@ func TestSetInvalidKReceipt(t *testing.T) {
 		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 		rec := httptest.NewRecorder()
 		c := e.NewContext(req, rec)
-		db, teardown := internal.SetupTestDB(t)
-		defer teardown()
-		h := CreateHandler(db)
+		h := CreateTestHandler()
 		// Assertions
 		if assert.NoError(t, h.KReceiptHandler(c)) {
 			assert.Equal(t, http.StatusBadRequest, rec.Code)
