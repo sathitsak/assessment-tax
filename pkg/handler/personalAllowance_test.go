@@ -1,5 +1,7 @@
 package handler
 
+
+
 import (
 	"encoding/json"
 	"net/http"
@@ -12,10 +14,10 @@ import (
 )
 
 
-func TestSetInvalidKReceipt(t *testing.T) {
+func TestSetInvalidPersonalAllowance(t *testing.T) {
 	tests := []string{
 		`{"amount": 100000.1,}`,
-		`{"amount": -0.1,}`,
+		`{"amount": 9999.9,}`,
 	}
 	for _, test := range tests {
 
@@ -26,14 +28,14 @@ func TestSetInvalidKReceipt(t *testing.T) {
 		c := e.NewContext(req, rec)
 		h := CreateTestHandler()
 		// Assertions
-		if assert.NoError(t, h.KReceiptHandler(c)) {
+		if assert.NoError(t, h.PersonalAllowanceHandler(c)) {
 			assert.Equal(t, http.StatusBadRequest, rec.Code)
 		}
 	}
 
 }
 
-func TestSetKReceipt(t *testing.T) {
+func TestSetPersonalAllowance(t *testing.T) {
 	var requestJSON = `{
 		"amount": 70000.0
 	  }`
@@ -44,15 +46,15 @@ func TestSetKReceipt(t *testing.T) {
 	c := e.NewContext(req, rec)
 
 	h := CreateTestHandler()
-	want := KReceiptResponse{
-		KReceipt: 70000.0,
+	want := PersonalAllowanceResponse{
+		PersonalDeduction: 70000.0,
 	}
-	var got KReceiptResponse
-	if assert.NoError(t, h.KReceiptHandler(c), json.Unmarshal(rec.Body.Bytes(), &got)) {
+	var got PersonalAllowanceResponse
+	if assert.NoError(t, h.PersonalAllowanceHandler(c), json.Unmarshal(rec.Body.Bytes(), &got)) {
 		assert.Equal(t, http.StatusOK, rec.Code)
 		assert.Equal(t, got, want)
 	}
-	amount, err := h.kReceipt.Read()
+	amount, err := h.personalAllowance.Read()
 	if assert.NoError(t, err) {
 		assert.Equal(t, 70000.0, amount)
 

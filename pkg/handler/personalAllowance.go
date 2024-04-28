@@ -10,7 +10,7 @@ type PersonalAllowance struct {
 	Amount float64 `json:"amount" form:"amount"`
 }
 type PersonalAllowanceResponse struct {
-	PersonalDeduction float64 `json:"personalDeduction" form:"personalDeduction"`
+	PersonalDeduction Decimal `json:"personalDeduction" form:"personalDeduction"`
 }
 
 func (h *Handler) PersonalAllowanceHandler(c echo.Context) error {
@@ -28,7 +28,7 @@ func (h *Handler) PersonalAllowanceHandler(c echo.Context) error {
 	if err != nil {
 		return c.String(http.StatusInternalServerError, "Internal server error please contact admin or try again later")
 	}
-	return c.JSON(http.StatusOK, PersonalAllowanceResponse{pa.Amount})
+	return c.JSON(http.StatusOK, PersonalAllowanceResponse{Decimal(pa.Amount)})
 }
 
 func (h *Handler) PersonalAllowanceValue(c echo.Context) (float64, error) {
